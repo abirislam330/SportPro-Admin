@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SportsPro Admin Console</title>
+    <title>SportsPro Admin Login</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -13,6 +13,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- SortableJS (Drag & Drop) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <!-- Chart.js (For Graphs) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root {
@@ -24,6 +26,29 @@
         }
 
         body { background-color: var(--bg-dark); color: var(--text-color); font-family: 'Segoe UI', sans-serif; overflow-x: hidden; }
+
+        /* Login Screen Styles */
+        #login-section {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #1e212d 0%, #0f111a 100%);
+        }
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            background-color: var(--sidebar-bg);
+            padding: 40px;
+            border-radius: 15px;
+            border: 1px solid #2a2d3a;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+        .login-logo { font-size: 32px; font-weight: 800; color: white; text-align: center; margin-bottom: 30px; }
+        .login-logo span { color: var(--primary-color); font-style: italic; }
+
+        /* Main Panel (Hidden initially) */
+        #admin-panel { display: none; }
 
         /* Sidebar Styles */
         .sidebar {
@@ -40,6 +65,13 @@
         .nav-link:hover, .nav-link.active { background-color: rgba(229, 9, 20, 0.15); color: var(--primary-color); }
         .nav-link i { width: 20px; text-align: center; }
 
+        .btn-logout {
+            margin-top: auto; 
+            background: rgba(255, 255, 255, 0.05); 
+            color: #ff4757;
+        }
+        .btn-logout:hover { background: rgba(255, 71, 87, 0.1); color: #ff4757; }
+
         /* Main Content */
         .main-content { margin-left: 260px; padding: 30px; }
 
@@ -47,6 +79,12 @@
         .custom-card { background-color: var(--card-bg); border-radius: 12px; padding: 20px; border: 1px solid #2a2d3a; margin-bottom: 20px; height: 100%; }
         .stats-info h3 { font-size: 28px; color: white; margin: 0; font-weight: 700; }
         
+        /* Stats Cards Gradient */
+        .card-gradient-1 { background: linear-gradient(45deg, #1e212d, #2a1e2d); }
+        .card-gradient-2 { background: linear-gradient(45deg, #1e212d, #1e2a2d); }
+        .card-gradient-3 { background: linear-gradient(45deg, #1e212d, #2d261e); }
+        .card-gradient-4 { background: linear-gradient(45deg, #1e212d, #2d1e1e); }
+
         /* Tables */
         .table-dark { --bs-table-bg: transparent; --bs-table-color: var(--text-color); --bs-table-border-color: #2a2d3a; }
         .table-dark th { color: #fff; font-weight: 600; text-transform: uppercase; font-size: 12px; }
@@ -70,270 +108,265 @@
 </head>
 <body>
 
-    <!-- Sidebar Navigation -->
-    <div class="sidebar">
-        <div class="brand-logo"><i class="fa-solid fa-play-circle"></i> Sports<span>Pro</span></div>
-        <nav class="nav flex-column">
-            <div class="nav-link active" onclick="showSection('dashboard')">
-                <i class="fa-solid fa-chart-pie"></i> Dashboard
-            </div>
+    <!-- 1. LOGIN SECTION -->
+    <div id="login-section">
+        <div class="login-card">
+            <div class="login-logo"><i class="fa-solid fa-play-circle"></i> Sports<span>Pro</span></div>
+            <p class="text-center text-secondary mb-4">Admin Console Access</p>
             
-            <!-- NEW: Banners Section -->
-            <div class="nav-link" onclick="showSection('banners')">
-                <i class="fa-solid fa-images"></i> Home Sliders
+            <div class="mb-3">
+                <label class="form-label text-white">Email Address</label>
+                <input type="email" id="loginEmail" class="form-control" placeholder="admin@example.com">
             </div>
-
-            <div class="nav-link" onclick="showSection('leagues')">
-                <i class="fa-solid fa-trophy"></i> Manage Leagues
+            <div class="mb-4">
+                <label class="form-label text-white">Password</label>
+                <input type="password" id="loginPass" class="form-control" placeholder="••••••••">
             </div>
-             <div class="nav-link" onclick="showSection('league-cats')">
-                <i class="fa-solid fa-list"></i> League Categories
-            </div>
-            <div class="nav-link" onclick="showSection('channels')">
-                <i class="fa-solid fa-tv"></i> Manage Channels
-            </div>
-            <div class="nav-link" onclick="showSection('categories')">
-                <i class="fa-solid fa-tags"></i> Channel Categories
-            </div>
-
-            <div class="nav-link" onclick="showSection('settings')">
-                <i class="fa-solid fa-gear"></i> App Settings
-            </div>
-            <div class="nav-link" onclick="showSection('ads')">
-                <i class="fa-solid fa-rectangle-ad"></i> Ads Manager
-            </div>
-        </nav>
+            <button class="btn btn-primary w-100 py-2 fw-bold" id="btnLogin">
+                <span id="btnText">LOGIN</span>
+                <div id="btnSpinner" class="spinner-border spinner-border-sm text-white ms-2" style="display:none;"></div>
+            </button>
+        </div>
     </div>
 
-    <!-- Main Content Area -->
-    <div class="main-content">
+    <!-- 2. ADMIN PANEL (Initially Hidden) -->
+    <div id="admin-panel">
         
-        <!-- 1. DASHBOARD SECTION -->
-        <div id="section-dashboard">
-            <h4 class="text-white mb-4">Dashboard Overview</h4>
-            <div class="row g-4">
-                <div class="col-md-3">
-                    <div class="custom-card d-flex justify-content-between align-items-center" style="border-color: #00ff9d;">
-                        <div class="stats-info">
-                            <h3 id="activeUsers" class="text-success">0</h3>
-                            <p class="m-0 text-white">Active Users</p>
-                        </div>
-                        <div class="spinner-grow text-success" role="status" style="width: 2rem; height: 2rem;">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
+        <!-- Sidebar Navigation -->
+        <div class="sidebar d-flex flex-column">
+            <div class="brand-logo"><i class="fa-solid fa-play-circle"></i> Sports<span>Pro</span></div>
+            <nav class="nav flex-column flex-grow-1">
+                <div class="nav-link active" onclick="showSection('dashboard')">
+                    <i class="fa-solid fa-chart-pie"></i> Dashboard
                 </div>
-                <div class="col-md-3">
-                    <div class="custom-card d-flex justify-content-between align-items-center">
-                        <div class="stats-info">
-                            <h3 id="totalLeagues">0</h3>
-                            <p class="m-0">Total Leagues</p>
-                        </div>
-                        <i class="fa-solid fa-trophy fs-2 text-warning"></i>
-                    </div>
+                
+                <div class="nav-link" onclick="showSection('banners')">
+                    <i class="fa-solid fa-images"></i> Home Sliders
                 </div>
-                <div class="col-md-3">
-                    <div class="custom-card d-flex justify-content-between align-items-center">
-                        <div class="stats-info">
-                            <h3 id="totalChannels">0</h3>
-                            <p class="m-0">Total Channels</p>
-                        </div>
-                        <i class="fa-solid fa-tv fs-2 text-danger"></i>
-                    </div>
+
+                <div class="nav-link" onclick="showSection('leagues')">
+                    <i class="fa-solid fa-trophy"></i> Manage Leagues
                 </div>
-                <div class="col-md-3">
-                    <div class="custom-card d-flex justify-content-between align-items-center">
-                        <div class="stats-info">
-                            <h3 id="totalBanners">0</h3>
-                            <p class="m-0">Active Sliders</p>
-                        </div>
-                        <i class="fa-solid fa-images fs-2 text-primary"></i>
-                    </div>
+                 <div class="nav-link" onclick="showSection('league-cats')">
+                    <i class="fa-solid fa-list"></i> League Categories
                 </div>
-            </div>
+                <div class="nav-link" onclick="showSection('channels')">
+                    <i class="fa-solid fa-tv"></i> Manage Channels
+                </div>
+                <div class="nav-link" onclick="showSection('categories')">
+                    <i class="fa-solid fa-tags"></i> Channel Categories
+                </div>
+
+                <div class="nav-link" onclick="showSection('settings')">
+                    <i class="fa-solid fa-gear"></i> App Settings
+                </div>
+                <div class="nav-link" onclick="showSection('ads')">
+                    <i class="fa-solid fa-rectangle-ad"></i> Ads Manager
+                </div>
+            </nav>
+            <!-- Logout Button -->
+            <button class="btn btn-logout nav-link justify-content-center" id="btnLogout">
+                <i class="fa-solid fa-sign-out-alt"></i> Logout
+            </button>
         </div>
 
-        <!-- 2. SLIDER / BANNER MANAGER (NEW) -->
-        <div id="section-banners" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h4 class="text-white m-0">Home Slider Manager</h4>
-                    <small class="text-secondary">Banners shown at the top of the app.</small>
+        <!-- Main Content Area -->
+        <div class="main-content">
+            
+            <!-- DASHBOARD -->
+            <div id="section-dashboard">
+                <h4 class="text-white mb-4">Content Overview</h4>
+                
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="custom-card d-flex justify-content-between align-items-center" style="border-color: #00ff9d;">
+                            <div class="stats-info">
+                                <h3 id="activeUsers" class="text-success">0</h3>
+                                <p class="m-0 text-white">Online Now</p>
+                            </div>
+                            <div class="spinner-grow text-success" role="status" style="width: 2rem; height: 2rem;"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="custom-card d-flex justify-content-between align-items-center">
+                            <div class="stats-info"><h3 id="totalLeagues">0</h3><p class="m-0">Total Leagues</p></div>
+                            <i class="fa-solid fa-trophy fs-2 text-warning"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="custom-card d-flex justify-content-between align-items-center">
+                            <div class="stats-info"><h3 id="totalChannels">0</h3><p class="m-0">Total Channels</p></div>
+                            <i class="fa-solid fa-tv fs-2 text-danger"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="custom-card d-flex justify-content-between align-items-center">
+                            <div class="stats-info"><h3 id="totalBanners">0</h3><p class="m-0">Active Sliders</p></div>
+                            <i class="fa-solid fa-images fs-2 text-primary"></i>
+                        </div>
+                    </div>
                 </div>
-                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#bannerModal" onclick="resetBannerForm()">
-                    <i class="fa-solid fa-plus"></i> Add Slider
-                </button>
-            </div>
 
-            <div class="custom-card p-0 overflow-hidden">
-                <table class="table table-dark table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th class="ps-4" style="width: 50px;">Sort</th>
-                            <th class="ps-2">Banner Image</th>
-                            <th>Description (Optional)</th>
-                            <th>Action Link</th>
-                            <th class="text-end pe-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="bannerTableBody">
-                        <!-- Banner Data will load here -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- 3. LEAGUE MANAGER SECTION (UPDATED) -->
-        <div id="section-leagues" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h4 class="text-white m-0">League Manager</h4>
-                    <small class="text-secondary">Drag rows to reorder leagues.</small>
+                <h4 class="text-white mb-3 mt-5">User Installation Stats</h4>
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="custom-card card-gradient-4 border-0">
+                            <div><p class="text-secondary mb-1">Total Users</p><h3 class="text-white fw-bold" id="installTotal">0</h3></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="custom-card card-gradient-1 border-0">
+                            <div><p class="text-secondary mb-1">New Today</p><h3 class="text-white fw-bold" id="installToday">0</h3></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="custom-card card-gradient-2 border-0">
+                            <div><p class="text-secondary mb-1">This Week</p><h3 class="text-white fw-bold" id="installWeek">0</h3></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="custom-card card-gradient-3 border-0">
+                            <div><p class="text-secondary mb-1">This Month</p><h3 class="text-white fw-bold" id="installMonth">0</h3></div>
+                        </div>
+                    </div>
                 </div>
-                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#leagueModal" onclick="resetLeagueForm()">
-                    <i class="fa-solid fa-plus"></i> Add League
-                </button>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="custom-card">
+                            <h5 class="text-white mb-4">Installation Growth (Last 7 Days)</h5>
+                            <div style="height: 300px;"><canvas id="installChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="custom-card p-0 overflow-hidden">
-                <table class="table table-dark table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th class="ps-4" style="width: 50px;">Sort</th>
-                            <th class="ps-2">Logo</th>
-                            <th>League Name</th>
-                            <th>Category</th>
-                            <th>Stream Link</th>
-                            <th class="text-end pe-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leagueTableBody">
-                        <!-- League Data will load here -->
-                    </tbody>
-                </table>
+            <!-- SLIDER / BANNER MANAGER -->
+            <div id="section-banners" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div><h4 class="text-white m-0">Home Slider Manager</h4></div>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#bannerModal" onclick="resetBannerForm()"><i class="fa-solid fa-plus"></i> Add Slider</button>
+                </div>
+                <div class="custom-card p-0 overflow-hidden">
+                    <table class="table table-dark table-hover mb-0">
+                        <thead><tr><th class="ps-4">Sort</th><th>Banner</th><th>Desc</th><th>Link</th><th class="text-end pe-4">Actions</th></tr></thead>
+                        <tbody id="bannerTableBody"></tbody>
+                    </table>
+                </div>
             </div>
-        </div>
 
-        <!-- 4. APP SETTINGS SECTION -->
-        <div id="section-settings" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
+            <!-- LEAGUE MANAGER -->
+            <div id="section-leagues" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div><h4 class="text-white m-0">League Manager</h4></div>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#leagueModal" onclick="resetLeagueForm()"><i class="fa-solid fa-plus"></i> Add League</button>
+                </div>
+                <div class="custom-card p-0 overflow-hidden">
+                    <table class="table table-dark table-hover mb-0">
+                        <thead><tr><th class="ps-4">Sort</th><th>Logo</th><th>League Name</th><th>Category</th><th>Link</th><th class="text-end pe-4">Actions</th></tr></thead>
+                        <tbody id="leagueTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SETTINGS -->
+            <div id="section-settings" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
                     <h4 class="text-white m-0">App Configuration</h4>
+                    <button class="btn btn-primary" id="saveSettingsBtn"><i class="fa-solid fa-save"></i> Save</button>
                 </div>
-                <button class="btn btn-primary" id="saveSettingsBtn"><i class="fa-solid fa-save"></i> Save</button>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="custom-card">
-                        <h5 class="text-white mb-3">App Links</h5>
-                        <div class="mb-4">
-                            <label class="form-label text-warning">Channel Request Link</label>
-                            <input type="text" id="requestUrl" class="form-control" placeholder="https://t.me/...">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="custom-card">
+                            <h5 class="text-white mb-3">App Links</h5>
+                            <div class="mb-3"><label class="form-label text-warning">Channel Request Link</label><input type="text" id="requestUrl" class="form-control"></div>
+                            <div class="mb-3"><label class="form-label text-success">Share App Link</label><input type="text" id="shareUrl" class="form-control"></div>
+                            <div class="mb-3"><label class="form-label text-info">Update URL</label><input type="text" id="updateUrl" class="form-control"></div>
+                            <div class="mb-3 p-3" style="background: rgba(229, 9, 20, 0.1); border: 1px dashed #e50914; border-radius: 8px;">
+                                <label class="form-label text-danger fw-bold">Latest Version Code</label>
+                                <input type="number" id="appVersionCode" class="form-control">
+                            </div>
                         </div>
-                        <div class="mb-2">
-                            <label class="form-label text-success">Share App Link</label>
-                            <input type="text" id="shareUrl" class="form-control" placeholder="https://play.google.com/...">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="custom-card">
+                            <h5 class="text-white mb-3">About Us</h5>
+                            <textarea id="aboutText" class="form-control" rows="8"></textarea>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="custom-card">
-                        <h5 class="text-white mb-3">About Us</h5>
-                        <textarea id="aboutText" class="form-control" rows="8"></textarea>
-                    </div>
-                </div>
             </div>
-        </div>
 
-        <!-- 5. ADS MANAGER SECTION -->
-        <div id="section-ads" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div><h4 class="text-white m-0">Ads Manager</h4></div>
-                <button class="btn btn-primary" id="saveAdsBtn"><i class="fa-solid fa-save"></i> Save</button>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="custom-card">
-                        <div class="d-flex justify-content-between mb-3">
-                            <h5 class="text-warning mb-0">Global Script / Popunder</h5>
-                            <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="adPopStatus"><label class="form-check-label text-white" for="adPopStatus">Enable</label></div>
+            <!-- ADS MANAGER -->
+            <div id="section-ads" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="text-white m-0">Ads Manager</h4>
+                    <button class="btn btn-primary" id="saveAdsBtn"><i class="fa-solid fa-save"></i> Save</button>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="custom-card">
+                            <div class="d-flex justify-content-between mb-3"><h5 class="text-warning mb-0">Global Script</h5><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="adPopStatus"></div></div>
+                            <textarea id="adPopCode" class="form-control"></textarea>
                         </div>
-                        <textarea id="adPopCode" class="form-control" placeholder="<script>...</script>"></textarea>
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="custom-card">
-                        <div class="d-flex justify-content-between mb-3">
-                            <h5 class="text-info mb-0">Native Banner</h5>
-                            <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="adNativeStatus"><label class="form-check-label text-white" for="adNativeStatus">Enable</label></div>
+                    <div class="col-md-6">
+                        <div class="custom-card">
+                            <div class="d-flex justify-content-between mb-3"><h5 class="text-info mb-0">Native Banner</h5><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="adNativeStatus"></div></div>
+                            <textarea id="adNativeCode" class="form-control"></textarea>
                         </div>
-                        <textarea id="adNativeCode" class="form-control" placeholder="<script>...</script>"></textarea>
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="custom-card">
-                        <div class="d-flex justify-content-between mb-3">
-                            <h5 class="text-success mb-0">Sticky Banner</h5>
-                            <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="adStickyStatus"><label class="form-check-label text-white" for="adStickyStatus">Enable</label></div>
+                    <div class="col-md-6">
+                        <div class="custom-card">
+                            <div class="d-flex justify-content-between mb-3"><h5 class="text-success mb-0">Sticky Banner</h5><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="adStickyStatus"></div></div>
+                            <textarea id="adStickyCode" class="form-control"></textarea>
                         </div>
-                        <textarea id="adStickyCode" class="form-control" placeholder="<script>...</script>"></textarea>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 6. LEAGUE CATEGORY MANAGER -->
-        <div id="section-league-cats" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="text-white m-0">League Categories</h4>
-            </div>
-            <div class="custom-card">
-                <div class="input-group">
-                    <input type="text" id="newLgCatName" class="form-control" placeholder="Enter Category Name">
-                    <button class="btn btn-primary" id="btnAddLgCat"><i class="fa-solid fa-plus"></i> Add</button>
+            <!-- LEAGUE CAT MANAGER -->
+            <div id="section-league-cats" style="display: none;">
+                <h4 class="text-white mb-4">League Categories</h4>
+                <div class="custom-card">
+                    <div class="input-group">
+                        <input type="text" id="newLgCatName" class="form-control" placeholder="Enter Category Name">
+                        <button class="btn btn-primary" id="btnAddLgCat">Add</button>
+                    </div>
                 </div>
+                <div class="custom-card p-0 overflow-hidden"><table class="table table-dark table-hover mb-0"><tbody id="lgCatTableBody"></tbody></table></div>
             </div>
-            <div class="custom-card p-0 overflow-hidden">
-                <table class="table table-dark table-hover mb-0">
-                    <tbody id="lgCatTableBody"></tbody>
-                </table>
-            </div>
-        </div>
 
-        <!-- 7. CHANNEL MANAGER & CATS -->
-        <div id="section-channels" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="text-white m-0">Channel List</h4>
-                <div class="d-flex gap-2">
-                    <select id="channelFilter" class="form-select w-auto"><option value="All">All Categories</option></select>
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#channelModal" onclick="resetForm()"><i class="fa-solid fa-plus"></i> Add</button>
+            <!-- CHANNEL MANAGER -->
+            <div id="section-channels" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="text-white m-0">Channel List</h4>
+                    <div class="d-flex gap-2">
+                        <select id="channelFilter" class="form-select w-auto"><option value="All">All Categories</option></select>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#channelModal" onclick="resetForm()">Add</button>
+                    </div>
                 </div>
+                <div class="custom-card p-0 overflow-hidden"><table class="table table-dark table-hover mb-0"><tbody id="channelTableBody"></tbody></table></div>
             </div>
-            <div class="custom-card p-0 overflow-hidden">
-                <table class="table table-dark table-hover mb-0">
-                    <tbody id="channelTableBody"></tbody>
-                </table>
-            </div>
-        </div>
 
-        <div id="section-categories" style="display: none;">
-            <div class="d-flex justify-content-between align-items-center mb-4"><h4 class="text-white m-0">Channel Categories</h4></div>
-            <div class="custom-card">
-                <div class="input-group">
-                    <input type="text" id="newCatName" class="form-control" placeholder="Enter Category Name">
-                    <button class="btn btn-primary" id="btnAddCat"><i class="fa-solid fa-plus"></i> Add</button>
+            <!-- CHANNEL CATEGORY MANAGER -->
+            <div id="section-categories" style="display: none;">
+                <h4 class="text-white mb-4">Channel Categories</h4>
+                <div class="custom-card">
+                    <div class="input-group">
+                        <input type="text" id="newCatName" class="form-control" placeholder="Enter Category Name">
+                        <button class="btn btn-primary" id="btnAddCat">Add</button>
+                    </div>
                 </div>
+                <div class="custom-card p-0 overflow-hidden"><table class="table table-dark table-hover mb-0"><tbody id="catTableBody"></tbody></table></div>
             </div>
-            <div class="custom-card p-0 overflow-hidden">
-                <table class="table table-dark table-hover mb-0"><tbody id="catTableBody"></tbody></table>
-            </div>
-        </div>
 
+        </div>
     </div>
 
     <!-- ================= MODALS ================= -->
 
-    <!-- Modal: Add/Edit Banner (NEW) -->
+    <!-- Modal: Add/Edit Banner -->
     <div class="modal fade" id="bannerModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -343,33 +376,20 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="bnrEditKey">
-                    
-                    <div class="mb-3">
-                        <label class="form-label text-warning">Image URL (Landscape)</label>
-                        <input type="text" class="form-control" id="bnrImage" placeholder="https://...">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Action/Stream Link</label>
-                        <input type="text" class="form-control" id="bnrLink" placeholder="http://example.com/live.m3u8">
-                        <small class="text-secondary">What happens when user clicks the banner?</small>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Title / Description (Optional)</label>
-                        <input type="text" class="form-control" id="bnrTitle" placeholder="e.g. Big Match Tonight">
-                    </div>
-
+                    <div class="mb-3"><label class="form-label text-warning">Image URL</label><input type="text" class="form-control" id="bnrImage"></div>
+                    <div class="mb-3"><label class="form-label">Title</label><input type="text" class="form-control" id="bnrTitle"></div>
+                    <div class="mb-3"><label class="form-label text-warning">Stream Link</label><input type="text" class="form-control" id="bnrLink"></div>
+                    <div class="mb-3"><label class="form-label">Extra Links</label><input type="text" class="form-control mb-2" id="bnrLink2"><input type="text" class="form-control" id="bnrLink3"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveBannerBtn">Save Slider</button>
+                    <button type="button" class="btn btn-primary" id="saveBannerBtn">Save</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal: Add/Edit League (UPDATED - No Banner Options) -->
+    <!-- Modal: Add/Edit League -->
     <div class="modal fade" id="leagueModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -379,41 +399,15 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="lgEditKey">
-                    
-                    <div class="mb-3">
-                        <label class="form-label">League Name</label>
-                        <input type="text" class="form-control" id="lgName">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Category</label>
-                        <select class="form-select" id="lgCat">
-                            <option value="">Select Category...</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">League Logo URL (Icon)</label>
-                        <input type="text" class="form-control" id="lgLogo">
-                    </div>
-
-                    <hr class="border-secondary">
-                    
-                    <div class="mb-3">
-                        <label class="form-label text-warning">Live Stream URL</label>
-                        <input type="text" class="form-control" id="lgSource1" placeholder="http://...">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Optional Links</label>
-                        <input type="text" class="form-control form-control-sm mb-2" id="lgLink2" placeholder="Backup Link 2">
-                        <input type="text" class="form-control form-control-sm" id="lgLink3" placeholder="Backup Link 3">
-                    </div>
-
+                    <div class="mb-3"><label class="form-label">Name</label><input type="text" class="form-control" id="lgName"></div>
+                    <div class="mb-3"><label class="form-label">Category</label><select class="form-select" id="lgCat"><option value="">Select...</option></select></div>
+                    <div class="mb-3"><label class="form-label">Logo</label><input type="text" class="form-control" id="lgLogo"></div>
+                    <div class="mb-3"><label class="form-label text-warning">Link 1</label><input type="text" class="form-control" id="lgSource1"></div>
+                    <div class="mb-3"><label class="form-label">Extra Links</label><input type="text" class="form-control mb-2" id="lgLink2"><input type="text" class="form-control" id="lgLink3"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveLeagueBtn">Save League</button>
+                    <button type="button" class="btn btn-primary" id="saveLeagueBtn">Save</button>
                 </div>
             </div>
         </div>
@@ -429,16 +423,15 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="chEditKey">
-                    <div class="mb-3"><label class="form-label">Channel Name</label><input type="text" class="form-control" id="chName"></div>
-                    <div class="mb-3"><label class="form-label">Category</label><select class="form-select" id="chCat"><option value="">Select Category...</option></select></div>
-                    <div class="mb-3"><label class="form-label">Logo URL</label><input type="text" class="form-control" id="chLogo"></div>
-                    <hr class="border-secondary">
-                    <div class="mb-3"><label class="form-label text-warning">Server 1 (Main)</label><input type="text" class="form-control" id="chLink" placeholder="http://..."></div>
-                    <div class="mb-2"><input type="text" class="form-control mb-2" id="chLink2" placeholder="Server 2"><input type="text" class="form-control" id="chLink3" placeholder="Server 3"></div>
+                    <div class="mb-3"><label class="form-label">Name</label><input type="text" class="form-control" id="chName"></div>
+                    <div class="mb-3"><label class="form-label">Category</label><select class="form-select" id="chCat"><option value="">Select...</option></select></div>
+                    <div class="mb-3"><label class="form-label">Logo</label><input type="text" class="form-control" id="chLogo"></div>
+                    <div class="mb-3"><label class="form-label text-warning">Link 1</label><input type="text" class="form-control" id="chLink"></div>
+                    <div class="mb-2"><input type="text" class="form-control mb-2" id="chLink2"><input type="text" class="form-control" id="chLink3"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveChannelBtn">Save Channel</button>
+                    <button type="button" class="btn btn-primary" id="saveChannelBtn">Save</button>
                 </div>
             </div>
         </div>
@@ -450,9 +443,9 @@
     <!-- FIREBASE LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
         import { getDatabase, ref, push, set, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-        // --- YOUR FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyDwcMREQuQiTDiJ8prnPkNzxV5eq2U097k",
             authDomain: "sportspro-fb7b9.firebaseapp.com",
@@ -464,84 +457,195 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getDatabase(app);
         
+        // ================= AUTHENTICATION LOGIC =================
+
+        const loginSection = document.getElementById('login-section');
+        const adminPanel = document.getElementById('admin-panel');
+        const btnLogin = document.getElementById('btnLogin');
+        const btnLogout = document.getElementById('btnLogout');
+        const btnSpinner = document.getElementById('btnSpinner');
+        const btnText = document.getElementById('btnText');
+
+        // Check Login State
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                loginSection.style.display = 'none';
+                adminPanel.style.display = 'block';
+                // Load data only if needed (already managed by onValue listeners below)
+            } else {
+                // User is signed out
+                loginSection.style.display = 'flex';
+                adminPanel.style.display = 'none';
+            }
+        });
+
+        // Login Action
+        btnLogin.addEventListener('click', () => {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+
+            if(!email || !pass) {
+                Swal.fire('Error', 'Please enter email and password', 'error');
+                return;
+            }
+
+            // UI Loading state
+            btnText.style.display = 'none';
+            btnSpinner.style.display = 'inline-block';
+            btnLogin.disabled = true;
+
+            signInWithEmailAndPassword(auth, email, pass)
+                .then((userCredential) => {
+                    const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+                    Toast.fire({ icon: 'success', title: 'Signed in successfully' });
+                })
+                .catch((error) => {
+                    Swal.fire('Login Failed', error.message, 'error');
+                })
+                .finally(() => {
+                    // Reset UI
+                    btnText.style.display = 'inline-block';
+                    btnSpinner.style.display = 'none';
+                    btnLogin.disabled = false;
+                });
+        });
+
+        // Logout Action
+        btnLogout.addEventListener('click', () => {
+            Swal.fire({
+                title: 'Logout?',
+                text: "You will be returned to the login screen.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e50914',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, logout'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    signOut(auth).then(() => {
+                        // Sign-out successful.
+                    }).catch((error) => {
+                        console.error(error);
+                    });
+                }
+            });
+        });
+
+        // ================= END AUTH LOGIC =================
+
         // Modal Instances
         const channelModal = new bootstrap.Modal(document.getElementById('channelModal'));
         const leagueModal = new bootstrap.Modal(document.getElementById('leagueModal'));
         const bannerModal = new bootstrap.Modal(document.getElementById('bannerModal'));
 
-        // ================= DASHBOARD STATS =================
+        // ================= DASHBOARD STATS & GRAPH =================
         onValue(ref(db, 'active_users'), (snapshot) => { document.getElementById('activeUsers').innerText = snapshot.exists() ? snapshot.size : 0; });
         onValue(ref(db, 'leagues'), (snapshot) => { document.getElementById('totalLeagues').innerText = snapshot.exists() ? snapshot.size : 0; });
         onValue(ref(db, 'channels'), (snapshot) => { document.getElementById('totalChannels').innerText = snapshot.exists() ? snapshot.size : 0; });
         
-        // ================= BANNER / SLIDER MANAGER (NEW LOGIC) =================
+        let installChartInstance = null;
+        onValue(ref(db, 'app_installs'), (snapshot) => {
+            const now = new Date();
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            const oneWeekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).getTime();
+            const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+            let countTotal = 0, countToday = 0, countWeek = 0, countMonth = 0;
+            const graphLabels = [];
+            const graphData = [0, 0, 0, 0, 0, 0, 0]; 
+
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+                graphLabels.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
+            }
+
+            if(snapshot.exists()) {
+                countTotal = snapshot.size;
+                snapshot.forEach(child => {
+                    const data = child.val();
+                    const ts = data.timestamp;
+                    if (ts >= todayStart) countToday++;
+                    if (ts >= oneWeekAgo) countWeek++;
+                    if (ts >= thisMonthStart) countMonth++;
+                    const daysDiff = Math.floor((now.getTime() - ts) / (1000 * 60 * 60 * 24));
+                    if (daysDiff >= 0 && daysDiff < 7) {
+                        graphData[6 - daysDiff]++; 
+                    }
+                });
+            }
+
+            document.getElementById('installTotal').innerText = countTotal;
+            document.getElementById('installToday').innerText = countToday;
+            document.getElementById('installWeek').innerText = countWeek;
+            document.getElementById('installMonth').innerText = countMonth;
+            renderChart(graphLabels, graphData);
+        });
+
+        function renderChart(labels, data) {
+            const ctx = document.getElementById('installChart').getContext('2d');
+            if (installChartInstance) installChartInstance.destroy();
+
+            installChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'New Installs',
+                        data: data,
+                        borderColor: '#e50914',
+                        backgroundColor: 'rgba(229, 9, 20, 0.2)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#fff',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#333' }, ticks: { color: '#a0a6b5', stepSize: 1 } },
+                        x: { grid: { display: false }, ticks: { color: '#a0a6b5' } }
+                    }
+                }
+            });
+        }
+
+        // ================= BANNER MANAGER =================
         onValue(ref(db, 'banners'), (snapshot) => {
             const count = snapshot.exists() ? snapshot.size : 0;
             document.getElementById('totalBanners').innerText = count;
-            
             const tbody = document.getElementById('bannerTableBody');
             tbody.innerHTML = '';
             if(snapshot.exists()) {
                 const arr = [];
                 snapshot.forEach((child) => { arr.push({key: child.key, ...child.val()}); });
                 arr.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-
                 arr.forEach(v => {
-                    tbody.innerHTML += `
-                        <tr data-id="${v.key}" class="draggable-row">
-                            <td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td>
-                            <td class="ps-2"><img src="${v.image}" class="banner-img-preview" onerror="this.src='https://via.placeholder.com/120x60'"></td>
-                            <td class="text-white">${v.title || '<span class="text-secondary">No Title</span>'}</td>
-                            <td><span class="badge bg-secondary text-truncate" style="max-width: 200px;">${v.link}</span></td>
-                            <td class="text-end pe-4">
-                                <button class="btn btn-sm btn-outline-info me-2" onclick="window.editBanner('${v.key}', '${v.image}', '${v.link}', '${v.title || ''}')"><i class="fa-solid fa-pen"></i></button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="window.deleteBanner('${v.key}')"><i class="fa-solid fa-trash"></i></button>
-                            </td>
-                        </tr>
-                    `;
+                    const safeTitle = (v.title || '').replace(/'/g, "\\'");
+                    tbody.innerHTML += `<tr data-id="${v.key}" class="draggable-row"><td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td><td class="ps-2"><img src="${v.image}" class="banner-img-preview" onerror="this.src='https://via.placeholder.com/120x60'"></td><td class="text-white">${v.title || '<span class="text-secondary">No Title</span>'}</td><td><span class="badge bg-secondary text-truncate" style="max-width: 200px;">${v.link}</span></td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-info me-2" onclick="window.editBanner('${v.key}', '${v.image}', '${v.link}', '${v.link2 || ''}', '${v.link3 || ''}', '${safeTitle}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteBanner('${v.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
                 });
             }
         });
-
-        // Banner Functions
         new Sortable(document.getElementById('bannerTableBody'), { animation: 150, handle: '.fa-bars', onEnd: function (evt) { document.querySelectorAll('#bannerTableBody tr').forEach((row, index) => { update(ref(db, 'banners/' + row.getAttribute('data-id')), { sortOrder: index }); }); } });
-        
         document.getElementById('saveBannerBtn').addEventListener('click', () => {
             const key = document.getElementById('bnrEditKey').value;
-            const data = { 
-                image: document.getElementById('bnrImage').value, 
-                link: document.getElementById('bnrLink').value, 
-                title: document.getElementById('bnrTitle').value,
-                sortOrder: key ? undefined : 9999 
-            };
+            const data = { image: document.getElementById('bnrImage').value, link: document.getElementById('bnrLink').value, link2: document.getElementById('bnrLink2').value, link3: document.getElementById('bnrLink3').value, title: document.getElementById('bnrTitle').value, sortOrder: key ? undefined : 9999 };
             if(key) delete data.sortOrder;
-            if(!data.image || !data.link) { Swal.fire('Error', 'Image and Link are required!', 'error'); return; }
-            
-            if(key) { update(ref(db, 'banners/' + key), data).then(() => { Swal.fire('Success', 'Updated', 'success'); bannerModal.hide(); }); } 
-            else { push(ref(db, 'banners'), data).then(() => { Swal.fire('Success', 'Added', 'success'); bannerModal.hide(); }); }
+            if(!data.image || !data.link) { Swal.fire('Error', 'Image and Main Link are required!', 'error'); return; }
+            if(key) { update(ref(db, 'banners/' + key), data).then(() => { Swal.fire('Success', 'Updated', 'success'); bannerModal.hide(); }); } else { push(ref(db, 'banners'), data).then(() => { Swal.fire('Success', 'Added', 'success'); bannerModal.hide(); }); }
         });
-
-        window.editBanner = function(key, image, link, title) {
-            document.getElementById('bnrEditKey').value = key;
-            document.getElementById('bnrImage').value = image;
-            document.getElementById('bnrLink').value = link;
-            document.getElementById('bnrTitle').value = title;
-            document.getElementById('bnrModalTitle').innerText = "Edit Slider";
-            bannerModal.show();
-        }
+        window.editBanner = function(key, image, link, link2, link3, title) { document.getElementById('bnrEditKey').value = key; document.getElementById('bnrImage').value = image; document.getElementById('bnrLink').value = link; document.getElementById('bnrLink2').value = link2; document.getElementById('bnrLink3').value = link3; document.getElementById('bnrTitle').value = title; document.getElementById('bnrModalTitle').innerText = "Edit Slider"; bannerModal.show(); }
         window.deleteBanner = function(key) { Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((res) => { if (res.isConfirmed) remove(ref(db, 'banners/' + key)); }); }
-        window.resetBannerForm = function() {
-            document.getElementById('bnrEditKey').value = "";
-            document.getElementById('bnrImage').value = "";
-            document.getElementById('bnrLink').value = "";
-            document.getElementById('bnrTitle').value = "";
-            document.getElementById('bnrModalTitle').innerText = "Add New Slider";
-        }
+        window.resetBannerForm = function() { document.getElementById('bnrEditKey').value = ""; document.getElementById('bnrImage').value = ""; document.getElementById('bnrLink').value = ""; document.getElementById('bnrLink2').value = ""; document.getElementById('bnrLink3').value = ""; document.getElementById('bnrTitle').value = ""; document.getElementById('bnrModalTitle').innerText = "Add New Slider"; }
 
-
-        // ================= LEAGUE FUNCTIONS (UPDATED) =================
+        // ================= LEAGUE FUNCTIONS =================
         onValue(ref(db, 'leagues'), (snapshot) => {
             const tbody = document.getElementById('leagueTableBody');
             tbody.innerHTML = '';
@@ -549,68 +653,23 @@
                 const leaguesArr = [];
                 snapshot.forEach((child) => { leaguesArr.push({key: child.key, ...child.val()}); });
                 leaguesArr.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-
                 leaguesArr.forEach(v => {
                     const shortLink = v.link.length > 20 ? v.link.substring(0, 20) + '...' : v.link;
-                    tbody.innerHTML += `
-                        <tr data-id="${v.key}" class="draggable-row">
-                            <td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td>
-                            <td class="ps-2"><img src="${v.logo}" class="channel-img-preview" onerror="this.src='https://via.placeholder.com/40'"></td>
-                            <td class="text-white fw-bold">${v.name}</td>
-                            <td><span class="badge bg-info text-dark">${v.category || 'N/A'}</span></td>
-                            <td><span class="badge bg-secondary text-truncate" style="max-width: 150px;">${shortLink}</span></td>
-                            <td class="text-end pe-4">
-                                <button class="btn btn-sm btn-outline-info me-2" onclick="window.editLeague('${v.key}', '${v.name}', '${v.category || ''}', '${v.logo}', '${v.link}', '${v.link2||''}', '${v.link3||''}')"><i class="fa-solid fa-pen"></i></button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="window.deleteLeague('${v.key}')"><i class="fa-solid fa-trash"></i></button>
-                            </td>
-                        </tr>
-                    `;
+                    tbody.innerHTML += `<tr data-id="${v.key}" class="draggable-row"><td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td><td class="ps-2"><img src="${v.logo}" class="channel-img-preview" onerror="this.src='https://via.placeholder.com/40'"></td><td class="text-white fw-bold">${v.name}</td><td><span class="badge bg-info text-dark">${v.category || 'N/A'}</span></td><td><span class="badge bg-secondary text-truncate" style="max-width: 150px;">${shortLink}</span></td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-info me-2" onclick="window.editLeague('${v.key}', '${v.name}', '${v.category || ''}', '${v.logo}', '${v.link}', '${v.link2||''}', '${v.link3||''}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteLeague('${v.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
                 });
             }
         });
-
         new Sortable(document.getElementById('leagueTableBody'), { animation: 150, handle: '.fa-bars', onEnd: function (evt) { document.querySelectorAll('#leagueTableBody tr').forEach((row, index) => { update(ref(db, 'leagues/' + row.getAttribute('data-id')), { sortOrder: index }); }); } });
-        
         document.getElementById('saveLeagueBtn').addEventListener('click', () => {
             const key = document.getElementById('lgEditKey').value;
-            // Removed Banner Fields
-            const data = { 
-                name: document.getElementById('lgName').value, 
-                category: document.getElementById('lgCat').value, 
-                logo: document.getElementById('lgLogo').value, 
-                link: document.getElementById('lgSource1').value, 
-                link2: document.getElementById('lgLink2').value, 
-                link3: document.getElementById('lgLink3').value, 
-                sortOrder: key ? undefined : 9999 
-            };
+            const data = { name: document.getElementById('lgName').value, category: document.getElementById('lgCat').value, logo: document.getElementById('lgLogo').value, link: document.getElementById('lgSource1').value, link2: document.getElementById('lgLink2').value, link3: document.getElementById('lgLink3').value, sortOrder: key ? undefined : 9999 };
             if(key) delete data.sortOrder;
             if(!data.name || !data.link) { Swal.fire('Error', 'Required fields missing!', 'error'); return; }
             if(key) { update(ref(db, 'leagues/' + key), data).then(() => { Swal.fire('Success', 'Updated', 'success'); leagueModal.hide(); }); } else { push(ref(db, 'leagues'), data).then(() => { Swal.fire('Success', 'Added', 'success'); leagueModal.hide(); }); }
         });
-        
-        // Removed banner params from edit function
-        window.editLeague = function(key, name, cat, logo, l1, l2, l3) { 
-            document.getElementById('lgEditKey').value = key; 
-            document.getElementById('lgName').value = name; 
-            document.getElementById('lgCat').value = cat; 
-            document.getElementById('lgLogo').value = logo; 
-            document.getElementById('lgSource1').value = l1; 
-            document.getElementById('lgLink2').value = l2; 
-            document.getElementById('lgLink3').value = l3; 
-            document.getElementById('lgModalTitle').innerText = "Edit League"; 
-            leagueModal.show(); 
-        }
+        window.editLeague = function(key, name, cat, logo, l1, l2, l3) { document.getElementById('lgEditKey').value = key; document.getElementById('lgName').value = name; document.getElementById('lgCat').value = cat; document.getElementById('lgLogo').value = logo; document.getElementById('lgSource1').value = l1; document.getElementById('lgLink2').value = l2; document.getElementById('lgLink3').value = l3; document.getElementById('lgModalTitle').innerText = "Edit League"; leagueModal.show(); }
         window.deleteLeague = function(key) { Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((res) => { if (res.isConfirmed) remove(ref(db, 'leagues/' + key)); }); }
-        window.resetLeagueForm = function() { 
-            document.getElementById('lgEditKey').value = ""; 
-            document.getElementById('lgName').value = ""; 
-            document.getElementById('lgCat').value = ""; 
-            document.getElementById('lgLogo').value = ""; 
-            document.getElementById('lgSource1').value = ""; 
-            document.getElementById('lgLink2').value = ""; 
-            document.getElementById('lgLink3').value = ""; 
-            document.getElementById('lgModalTitle').innerText = "Add New League"; 
-        }
+        window.resetLeagueForm = function() { document.getElementById('lgEditKey').value = ""; document.getElementById('lgName').value = ""; document.getElementById('lgCat').value = ""; document.getElementById('lgLogo').value = ""; document.getElementById('lgSource1').value = ""; document.getElementById('lgLink2').value = ""; document.getElementById('lgLink3').value = ""; document.getElementById('lgModalTitle').innerText = "Add New League"; }
 
         // ================= APP SETTINGS =================
         const settingsRef = ref(db, 'app_settings');
@@ -619,10 +678,20 @@
                 const data = snap.val();
                 document.getElementById('requestUrl').value = data.request_url || '';
                 document.getElementById('shareUrl').value = data.share_url || '';
+                document.getElementById('updateUrl').value = data.update_url || '';
                 document.getElementById('aboutText').value = data.about_text || '';
+                document.getElementById('appVersionCode').value = data.latest_version_code || '1';
             }
         });
-        document.getElementById('saveSettingsBtn').addEventListener('click', () => { update(settingsRef, { request_url: document.getElementById('requestUrl').value, share_url: document.getElementById('shareUrl').value, about_text: document.getElementById('aboutText').value }).then(() => { Swal.fire('Saved!', 'Settings updated.', 'success'); }); });
+        document.getElementById('saveSettingsBtn').addEventListener('click', () => { 
+            update(settingsRef, { 
+                request_url: document.getElementById('requestUrl').value, 
+                share_url: document.getElementById('shareUrl').value, 
+                update_url: document.getElementById('updateUrl').value, 
+                about_text: document.getElementById('aboutText').value,
+                latest_version_code: parseInt(document.getElementById('appVersionCode').value) || 1
+            }).then(() => { Swal.fire('Saved!', 'Settings updated.', 'success'); }); 
+        });
 
         // ================= ADS MANAGER =================
         const adsRef = ref(db, 'app_settings/ads');
@@ -642,14 +711,13 @@
             set(adsRef, adsData).then(() => Swal.fire('Saved!', 'Ad settings updated.', 'success'));
         });
 
-        // ================= LEAGUE CATEGORY FUNCTIONS =================
+        // ================= LEAGUE CATS & CHANNELS =================
         new Sortable(document.getElementById('lgCatTableBody'), { animation: 150, handle: '.fa-bars', onEnd: function (evt) { document.querySelectorAll('#lgCatTableBody tr').forEach((row, index) => { update(ref(db, 'league_categories/' + row.getAttribute('data-id')), { sortOrder: index }); }); } });
         document.getElementById('btnAddLgCat').addEventListener('click', () => { const catName = document.getElementById('newLgCatName').value; if(catName) { push(ref(db, 'league_categories'), { name: catName, sortOrder: 9999 }).then(() => { Swal.fire('Success', 'Category Added!', 'success'); document.getElementById('newLgCatName').value = ''; }); } });
         window.editLgCat = async function(key, oldName) { const { value: newName } = await Swal.fire({ title: 'Rename Category', input: 'text', inputValue: oldName, showCancelButton: true }); if (newName && newName !== oldName) { update(ref(db, 'league_categories/' + key), { name: newName }); } };
         onValue(ref(db, 'league_categories'), (snapshot) => { const tbody = document.getElementById('lgCatTableBody'); const dropdown = document.getElementById('lgCat'); tbody.innerHTML = ''; dropdown.innerHTML = '<option value="">Select Category...</option>'; if(snapshot.exists()) { const catArr = []; snapshot.forEach((child) => { catArr.push({key: child.key, ...child.val()}); }); catArr.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)); catArr.forEach(v => { tbody.innerHTML += `<tr data-id="${v.key}" class="draggable-row"><td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td><td>${v.name}</td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-warning me-2" onclick="window.editLgCat('${v.key}', '${v.name}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteLgCat('${v.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`; dropdown.innerHTML += `<option value="${v.name}">${v.name}</option>`; }); } });
         window.deleteLgCat = function(key) { remove(ref(db, 'league_categories/' + key)); }
 
-        // ================= CHANNEL FUNCTIONS =================
         window.allChannelsData = [];
         document.getElementById('channelFilter').addEventListener('change', function() { renderChannelTable(this.value); });
         function renderChannelTable(filterCat = "All") { const tbody = document.getElementById('channelTableBody'); tbody.innerHTML = ''; let displayData = window.allChannelsData; if(filterCat !== "All") { displayData = window.allChannelsData.filter(ch => ch.category === filterCat); } displayData.forEach(v => { tbody.innerHTML += `<tr data-id="${v.key}" class="draggable-row"><td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td><td class="ps-2"><img src="${v.logo}" class="channel-img-preview" onerror="this.src='https://via.placeholder.com/40'"></td><td class="text-white fw-bold">${v.name}</td><td><span class="badge bg-secondary">${v.category}</span></td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-info me-2" onclick="window.editChannel('${v.key}', '${v.name}', '${v.logo}', '${v.category}', '${v.link}', '${v.link2 || ''}', '${v.link3 || ''}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteChannel('${v.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`; }); }
@@ -660,11 +728,10 @@
         window.deleteChannel = function(key) { Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((res) => { if (res.isConfirmed) remove(ref(db, 'channels/' + key)); }); }
         window.resetForm = function() { document.getElementById('chEditKey').value = ""; document.getElementById('chName').value = ""; document.getElementById('chLogo').value = ""; const filterVal = document.getElementById('channelFilter').value; document.getElementById('chCat').value = filterVal === "All" ? "" : filterVal; document.getElementById('chLink').value = ""; document.getElementById('chLink2').value = ""; document.getElementById('chLink3').value = ""; document.getElementById('chModalTitle').innerText = "Add New Channel"; }
 
-        // ================= CHANNEL CAT FUNCTIONS =================
         new Sortable(document.getElementById('catTableBody'), { animation: 150, handle: '.fa-bars', onEnd: function (evt) { document.querySelectorAll('#catTableBody tr').forEach((row, index) => { update(ref(db, 'categories/' + row.getAttribute('data-id')), { sortOrder: index }); }); } });
         document.getElementById('btnAddCat').addEventListener('click', () => { const catName = document.getElementById('newCatName').value; if(catName) { push(ref(db, 'categories'), { name: catName, sortOrder: 9999 }).then(() => { Swal.fire('Success', 'Category Added!', 'success'); document.getElementById('newCatName').value = ''; }); } });
         window.editCat = async function(key, oldName) { const { value: newName } = await Swal.fire({ title: 'Rename Category', input: 'text', inputValue: oldName, showCancelButton: true }); if (newName && newName !== oldName) { update(ref(db, 'categories/' + key), { name: newName }); } };
-        onValue(ref(db, 'categories'), (snapshot) => { const tbody = document.getElementById('catTableBody'); const dropdown = document.getElementById('chCat'); const filterDropdown = document.getElementById('channelFilter'); tbody.innerHTML = ''; dropdown.innerHTML = '<option value="">Select Category...</option>'; const currentFilter = filterDropdown.value; filterDropdown.innerHTML = '<option value="All">All Categories</option>'; if(snapshot.exists()) { const catArr = []; snapshot.forEach((child) => { catArr.push({key: child.key, ...child.val()}); }); catArr.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)); catArr.forEach(v => { tbody.innerHTML += `<tr data-id="${v.key}" class="draggable-row"><td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td><td>${v.name}</td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-warning me-2" onclick="window.editCat('${v.key}', '${v.name}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteCat('${v.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`; dropdown.innerHTML += `<option value="${v.name}">${v.name}</option>`; filterDropdown.innerHTML += `<option value="${v.name}">${v.name}</option>`; }); document.getElementById('totalCats').innerText = catArr.length; } filterDropdown.value = currentFilter; });
+        onValue(ref(db, 'categories'), (snapshot) => { const tbody = document.getElementById('catTableBody'); const dropdown = document.getElementById('chCat'); const filterDropdown = document.getElementById('channelFilter'); tbody.innerHTML = ''; dropdown.innerHTML = '<option value="">Select Category...</option>'; const currentFilter = filterDropdown.value; filterDropdown.innerHTML = '<option value="All">All Categories</option>'; if(snapshot.exists()) { const catArr = []; snapshot.forEach((child) => { catArr.push({key: child.key, ...child.val()}); }); catArr.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)); catArr.forEach(v => { tbody.innerHTML += `<tr data-id="${v.key}" class="draggable-row"><td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td><td>${v.name}</td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-warning me-2" onclick="window.editCat('${v.key}', '${v.name}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteCat('${v.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`; dropdown.innerHTML += `<option value="${v.name}">${v.name}</option>`; filterDropdown.innerHTML += `<option value="${v.name}">${v.name}</option>`; }); } filterDropdown.value = currentFilter; });
         window.deleteCat = function(key) { remove(ref(db, 'categories/' + key)); }
 
         // Section Switcher
