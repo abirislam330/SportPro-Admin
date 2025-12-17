@@ -104,6 +104,12 @@
         .modal-header, .modal-footer { border-color: #333; }
         .btn-primary { background-color: var(--primary-color); border: none; }
         .btn-primary:hover { background-color: #c40812; }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #151823; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #e50914; }
     </style>
 </head>
 <body>
@@ -140,6 +146,10 @@
                     <i class="fa-solid fa-chart-pie"></i> Dashboard
                 </div>
                 
+                <div class="nav-link" onclick="showSection('m3u-import')">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> Import M3U
+                </div>
+
                 <div class="nav-link" onclick="showSection('banners')">
                     <i class="fa-solid fa-images"></i> Home Sliders
                 </div>
@@ -237,6 +247,57 @@
                             <h5 class="text-white mb-4">Installation Growth (Last 7 Days)</h5>
                             <div style="height: 300px;"><canvas id="installChart"></canvas></div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- M3U IMPORTER SECTION (SCROLL FIXED & CLEAN) -->
+            <div id="section-m3u-import" style="display: none;">
+                <h4 class="text-white mb-4">Import Channels (Direct Playlist)</h4>
+                
+                <div class="custom-card mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label text-info">M3U Playlist URL</label>
+                            <div class="input-group">
+                                <input type="text" id="impM3uUrl" class="form-control" placeholder="http://server.com/get.php?username=...&token=...">
+                                <button class="btn btn-primary" id="btnFetchM3u">Load Channels</button>
+                            </div>
+                            <small class="text-secondary">Enter your playlist URL directly.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="loaderM3u" class="text-center py-5" style="display: none;">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="text-white mt-2">Parsing Playlist... Please wait.</p>
+                </div>
+
+                <!-- Import Table (Scrollable) -->
+                <div id="importArea" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-white">Found Channels: <span id="foundCount" class="text-success">0</span></h5>
+                        <div class="d-flex gap-2">
+                            <select id="impTargetCat" class="form-select w-auto">
+                                <option value="">Select Target Category...</option>
+                            </select>
+                            <button class="btn btn-success" id="btnConfirmImport"><i class="fa-solid fa-check"></i> Import Selected</button>
+                        </div>
+                    </div>
+
+                    <!-- Scrollable Container with Fixed Header -->
+                    <div class="custom-card p-0" style="max-height: 600px; overflow-y: auto; border: 1px solid #2a2d3a;">
+                        <table class="table table-dark table-hover mb-0">
+                            <thead style="position: sticky; top: 0; background-color: #1e212d; z-index: 5;">
+                                <tr>
+                                    <th class="ps-4" style="width: 50px;"><input type="checkbox" id="selectAllCh"></th>
+                                    <th>Channel Name</th>
+                                    <th>Original Link (Preview)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="m3uListBody"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -734,9 +795,130 @@
         onValue(ref(db, 'categories'), (snapshot) => { const tbody = document.getElementById('catTableBody'); const dropdown = document.getElementById('chCat'); const filterDropdown = document.getElementById('channelFilter'); tbody.innerHTML = ''; dropdown.innerHTML = '<option value="">Select Category...</option>'; const currentFilter = filterDropdown.value; filterDropdown.innerHTML = '<option value="All">All Categories</option>'; if(snapshot.exists()) { const catArr = []; snapshot.forEach((child) => { catArr.push({key: child.key, ...child.val()}); }); catArr.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)); catArr.forEach(v => { tbody.innerHTML += `<tr data-id="${v.key}" class="draggable-row"><td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td><td>${v.name}</td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-warning me-2" onclick="window.editCat('${v.key}', '${v.name}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteCat('${v.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`; dropdown.innerHTML += `<option value="${v.name}">${v.name}</option>`; filterDropdown.innerHTML += `<option value="${v.name}">${v.name}</option>`; }); } filterDropdown.value = currentFilter; });
         window.deleteCat = function(key) { remove(ref(db, 'categories/' + key)); }
 
+
+        // ================= M3U IMPORT LOGIC (CLEAN - NO PROXY) =================
+        
+        // 1. Populate Category Dropdown for Import
+        onValue(ref(db, 'categories'), (snapshot) => {
+            const impDropdown = document.getElementById('impTargetCat');
+            impDropdown.innerHTML = '<option value="">Select Target Category...</option>';
+            if(snapshot.exists()) {
+                snapshot.forEach((child) => {
+                    impDropdown.innerHTML += `<option value="${child.val().name}">${child.val().name}</option>`;
+                });
+            }
+        });
+
+        let parsedChannels = [];
+
+        // 2. Fetch M3U Function (Direct Fetch via Proxy for Text Preview Only)
+        document.getElementById('btnFetchM3u').addEventListener('click', async () => {
+            const url = document.getElementById('impM3uUrl').value;
+            if(!url) return Swal.fire('Error', 'Please enter Playlist URL', 'error');
+
+            document.getElementById('loaderM3u').style.display = 'block';
+            document.getElementById('importArea').style.display = 'none';
+
+            try {
+                // We use this JUST to read the text content of the playlist.
+                // It does NOT affect the final link saved to Firebase.
+                const corsProxy = 'https://api.allorigins.win/raw?url=';
+                const response = await fetch(corsProxy + encodeURIComponent(url)); 
+                if(!response.ok) throw new Error("Network response was not ok");
+                const text = await response.text();
+                parseM3U(text);
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Failed', 'Could not load playlist. Check URL or try again.', 'error');
+                document.getElementById('loaderM3u').style.display = 'none';
+            }
+        });
+
+        // 3. Parse Logic
+        function parseM3U(data) {
+            const lines = data.split('\n');
+            parsedChannels = [];
+            let currentName = "";
+            let currentLogo = "";
+
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                if (line.startsWith('#EXTINF')) {
+                    const nameParts = line.split(',');
+                    currentName = nameParts[nameParts.length - 1].trim();
+                    const logoMatch = line.match(/tvg-logo="([^"]*)"/);
+                    currentLogo = logoMatch ? logoMatch[1] : "";
+                } else if (line.startsWith('http')) {
+                    if (currentName) {
+                        // Important: We store the ORIGINAL line from the playlist
+                        parsedChannels.push({ name: currentName, logo: currentLogo, url: line });
+                        currentName = ""; 
+                    }
+                }
+            }
+
+            renderImportTable();
+        }
+
+        // 4. Render Table (Fixed Scrolling)
+        function renderImportTable() {
+            document.getElementById('loaderM3u').style.display = 'none';
+            document.getElementById('importArea').style.display = 'block';
+            document.getElementById('foundCount').innerText = parsedChannels.length;
+            
+            const tbody = document.getElementById('m3uListBody');
+            tbody.innerHTML = '';
+
+            // Rendering all channels might slow down browser, limiting to 500 for display safety
+            parsedChannels.slice(0, 500).forEach((ch, index) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="ps-4"><input type="checkbox" class="imp-check" data-index="${index}"></td>
+                        <td class="text-white fw-bold">${ch.name}</td>
+                        <td class="text-secondary text-truncate" style="max-width: 200px;">${ch.url}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        document.getElementById('selectAllCh').addEventListener('change', function() {
+            document.querySelectorAll('.imp-check').forEach(cb => cb.checked = this.checked);
+        });
+
+        // 5. Final Import Action (Direct Save)
+        document.getElementById('btnConfirmImport').addEventListener('click', () => {
+            const targetCat = document.getElementById('impTargetCat').value;
+
+            if(!targetCat) return Swal.fire('Error', 'Select a category!', 'warning');
+
+            const selectedCheckboxes = document.querySelectorAll('.imp-check:checked');
+            if(selectedCheckboxes.length === 0) return Swal.fire('Error', 'No channels selected', 'warning');
+
+            let importCount = 0;
+
+            selectedCheckboxes.forEach(cb => {
+                const idx = cb.getAttribute('data-index');
+                const chData = parsedChannels[idx];
+
+                // SIMPLE SAVE: Just save the URL found in the playlist directly to Firebase
+                push(ref(db, 'channels'), {
+                    name: chData.name,
+                    category: targetCat,
+                    logo: chData.logo || "https://via.placeholder.com/100",
+                    link: chData.url, 
+                    link2: "",
+                    link3: "",
+                    sortOrder: 9999
+                });
+                importCount++;
+            });
+
+            Swal.fire('Success', `${importCount} Channels imported successfully!`, 'success');
+        });
+
         // Section Switcher
         window.showSection = function(id) {
-            ['dashboard', 'settings', 'ads', 'leagues', 'league-cats', 'categories', 'channels', 'banners'].forEach(sec => {
+            ['dashboard', 'settings', 'ads', 'leagues', 'league-cats', 'categories', 'channels', 'banners', 'm3u-import'].forEach(sec => {
                 const el = document.getElementById('section-' + sec);
                 if(el) el.style.display = 'none';
             });
