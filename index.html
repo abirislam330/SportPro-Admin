@@ -23,6 +23,7 @@
             --card-bg: #1e212d;
             --primary-color: #e50914;
             --text-color: #a0a6b5;
+            --sidebar-width: 260px;
         }
 
         body { background-color: var(--bg-dark); color: var(--text-color); font-family: 'Segoe UI', sans-serif; overflow-x: hidden; }
@@ -34,6 +35,7 @@
             justify-content: center;
             align-items: center;
             background: radial-gradient(circle at center, #1e212d 0%, #0f111a 100%);
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 2000;
         }
         .login-card {
             width: 100%;
@@ -43,18 +45,20 @@
             border-radius: 15px;
             border: 1px solid #2a2d3a;
             box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            margin: 20px;
         }
         .login-logo { font-size: 32px; font-weight: 800; color: white; text-align: center; margin-bottom: 30px; }
         .login-logo span { color: var(--primary-color); font-style: italic; }
 
-        /* Main Panel (Hidden initially) */
-        #admin-panel { display: none; }
+        /* Main Panel */
+        #admin-panel { display: none; min-height: 100vh; }
 
         /* Sidebar Styles */
         .sidebar {
-            width: 260px; height: 100vh; background-color: var(--sidebar-bg);
+            width: var(--sidebar-width); height: 100vh; background-color: var(--sidebar-bg);
             position: fixed; top: 0; left: 0; padding: 20px;
             border-right: 1px solid #2a2d3a; z-index: 1000;
+            transition: transform 0.3s ease;
         }
         .brand-logo { font-size: 24px; font-weight: 800; color: white; margin-bottom: 40px; }
         .brand-logo span { color: var(--primary-color); font-style: italic; }
@@ -69,14 +73,31 @@
             margin-top: auto; 
             background: rgba(255, 255, 255, 0.05); 
             color: #ff4757;
+            border: none;
+            width: 100%;
         }
         .btn-logout:hover { background: rgba(255, 71, 87, 0.1); color: #ff4757; }
 
         /* Main Content */
-        .main-content { margin-left: 260px; padding: 30px; }
+        .main-content { margin-left: var(--sidebar-width); padding: 30px; transition: margin 0.3s ease; }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.mobile-active { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 15px; }
+            .mobile-nav-toggle { display: block !important; position: fixed; top: 15px; right: 15px; z-index: 1100; }
+        }
 
         /* Cards */
-        .custom-card { background-color: var(--card-bg); border-radius: 12px; padding: 20px; border: 1px solid #2a2d3a; margin-bottom: 20px; height: 100%; }
+        .custom-card { 
+            background-color: var(--card-bg); 
+            border-radius: 12px; 
+            padding: 20px; 
+            border: 1px solid #2a2d3a; 
+            margin-bottom: 20px; 
+            height: 100%;
+        }
         .stats-info h3 { font-size: 28px; color: white; margin: 0; font-weight: 700; }
         
         /* Stats Cards Gradient */
@@ -91,19 +112,28 @@
         .table-dark td { vertical-align: middle; }
         .draggable-row { cursor: grab; }
         .draggable-row:active { cursor: grabbing; background-color: #2a2d3a; }
-        .channel-img-preview { width: 50px; height: 50px; object-fit: contain; background: #fff; padding: 2px; border-radius: 4px; }
-        .banner-img-preview { width: 120px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #333; }
+        .channel-img-preview { width: 40px; height: 40px; object-fit: contain; background: #fff; padding: 2px; border-radius: 4px; }
+        .team-logo-sm { width: 30px; height: 30px; object-fit: contain; background: #fff; border-radius: 50%; padding: 2px; }
+        .expired-row { opacity: 0.6; background: rgba(255,0,0,0.05); }
 
         /* Forms */
         .form-control, .form-select { background-color: #151823; border: 1px solid #333; color: white; }
         .form-control:focus, .form-select:focus { background-color: #151823; border-color: var(--primary-color); color: white; box-shadow: none; }
+        .form-control::placeholder { color: #555; }
         textarea.form-control { min-height: 100px; font-family: monospace; font-size: 13px; color: #fff; }
+
+        /* NEW: Dark Tabs Styling */
+        .nav-tabs { border-bottom: 1px solid #2a2d3a; margin-bottom: 20px; }
+        .nav-tabs .nav-link { color: var(--text-color); border: none; background: transparent; padding: 10px 20px; font-weight: 600; margin-right: 5px; }
+        .nav-tabs .nav-link:hover { color: white; background: rgba(255,255,255,0.05); border-radius: 5px 5px 0 0; }
+        .nav-tabs .nav-link.active { color: white; background-color: var(--primary-color); border-radius: 5px 5px 0 0; }
 
         /* Modal */
         .modal-content { background-color: var(--card-bg); color: white; border: 1px solid #333; }
         .modal-header, .modal-footer { border-color: #333; }
         .btn-primary { background-color: var(--primary-color); border: none; }
         .btn-primary:hover { background-color: #c40812; }
+        .btn-close-white { filter: invert(1); }
         
         /* Scrollbar Styling */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -113,6 +143,11 @@
     </style>
 </head>
 <body>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="btn btn-primary mobile-nav-toggle" style="display:none;" onclick="toggleMobileSidebar()">
+        <i class="fa-solid fa-bars"></i>
+    </button>
 
     <!-- 1. LOGIN SECTION -->
     <div id="login-section">
@@ -139,43 +174,38 @@
     <div id="admin-panel">
         
         <!-- Sidebar Navigation -->
-        <div class="sidebar d-flex flex-column">
+        <div class="sidebar d-flex flex-column" id="sidebar">
             <div class="brand-logo"><i class="fa-solid fa-play-circle"></i> Sports<span>Pro</span></div>
             <nav class="nav flex-column flex-grow-1">
-                <div class="nav-link active" onclick="showSection('dashboard')">
+                <div class="nav-link active" onclick="showSection('dashboard', this)">
                     <i class="fa-solid fa-chart-pie"></i> Dashboard
                 </div>
+
+                <div class="nav-link" onclick="showSection('matches', this)">
+                    <i class="fa-solid fa-futbol"></i> Manage Matches
+                </div>
+
+                <!-- Manage Teams/Leagues -->
+                <div class="nav-link" onclick="showSection('teams', this)">
+                    <i class="fa-solid fa-users-line"></i> Teams & Leagues
+                </div>
                 
-                <div class="nav-link" onclick="showSection('m3u-import')">
-                    <i class="fa-solid fa-cloud-arrow-down"></i> Import M3U
-                </div>
-
-                <div class="nav-link" onclick="showSection('banners')">
-                    <i class="fa-solid fa-images"></i> Home Sliders
-                </div>
-
-                <div class="nav-link" onclick="showSection('leagues')">
-                    <i class="fa-solid fa-trophy"></i> Manage Leagues
-                </div>
-                 <div class="nav-link" onclick="showSection('league-cats')">
-                    <i class="fa-solid fa-list"></i> League Categories
-                </div>
-                <div class="nav-link" onclick="showSection('channels')">
+                <div class="nav-link" onclick="showSection('channels', this)">
                     <i class="fa-solid fa-tv"></i> Manage Channels
                 </div>
-                <div class="nav-link" onclick="showSection('categories')">
+                <div class="nav-link" onclick="showSection('categories', this)">
                     <i class="fa-solid fa-tags"></i> Channel Categories
                 </div>
 
-                <div class="nav-link" onclick="showSection('settings')">
+                <div class="nav-link" onclick="showSection('settings', this)">
                     <i class="fa-solid fa-gear"></i> App Settings
                 </div>
-                <div class="nav-link" onclick="showSection('ads')">
+                <div class="nav-link" onclick="showSection('ads', this)">
                     <i class="fa-solid fa-rectangle-ad"></i> Ads Manager
                 </div>
             </nav>
             <!-- Logout Button -->
-            <button class="btn btn-logout nav-link justify-content-center" id="btnLogout">
+            <button class="btn-logout nav-link justify-content-center" id="btnLogout">
                 <i class="fa-solid fa-sign-out-alt"></i> Logout
             </button>
         </div>
@@ -188,7 +218,7 @@
                 <h4 class="text-white mb-4">Content Overview</h4>
                 
                 <div class="row g-4 mb-4">
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                         <div class="custom-card d-flex justify-content-between align-items-center" style="border-color: #00ff9d;">
                             <div class="stats-info">
                                 <h3 id="activeUsers" class="text-success">0</h3>
@@ -197,44 +227,32 @@
                             <div class="spinner-grow text-success" role="status" style="width: 2rem; height: 2rem;"></div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="custom-card d-flex justify-content-between align-items-center">
-                            <div class="stats-info"><h3 id="totalLeagues">0</h3><p class="m-0">Total Leagues</p></div>
-                            <i class="fa-solid fa-trophy fs-2 text-warning"></i>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                         <div class="custom-card d-flex justify-content-between align-items-center">
                             <div class="stats-info"><h3 id="totalChannels">0</h3><p class="m-0">Total Channels</p></div>
                             <i class="fa-solid fa-tv fs-2 text-danger"></i>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="custom-card d-flex justify-content-between align-items-center">
-                            <div class="stats-info"><h3 id="totalBanners">0</h3><p class="m-0">Active Sliders</p></div>
-                            <i class="fa-solid fa-images fs-2 text-primary"></i>
                         </div>
                     </div>
                 </div>
 
                 <h4 class="text-white mb-3 mt-5">User Installation Stats</h4>
                 <div class="row g-4 mb-4">
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-6">
                         <div class="custom-card card-gradient-4 border-0">
                             <div><p class="text-secondary mb-1">Total Users</p><h3 class="text-white fw-bold" id="installTotal">0</h3></div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-6">
                         <div class="custom-card card-gradient-1 border-0">
                             <div><p class="text-secondary mb-1">New Today</p><h3 class="text-white fw-bold" id="installToday">0</h3></div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-6">
                         <div class="custom-card card-gradient-2 border-0">
                             <div><p class="text-secondary mb-1">This Week</p><h3 class="text-white fw-bold" id="installWeek">0</h3></div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 col-6">
                         <div class="custom-card card-gradient-3 border-0">
                             <div><p class="text-secondary mb-1">This Month</p><h3 class="text-white fw-bold" id="installMonth">0</h3></div>
                         </div>
@@ -251,82 +269,124 @@
                 </div>
             </div>
 
-            <!-- M3U IMPORTER SECTION (SCROLL FIXED & CLEAN) -->
-            <div id="section-m3u-import" style="display: none;">
-                <h4 class="text-white mb-4">Import Channels (Direct Playlist)</h4>
+            <!-- MATCH MANAGER -->
+            <div id="section-matches" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="text-white m-0">Live Match Manager</h4>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-danger btn-sm" onclick="clearExpiredMatches()"><i class="fa-solid fa-trash-can"></i> Clear Expired</button>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#matchModal" onclick="resetMatchForm()"><i class="fa-solid fa-plus"></i> Add Match</button>
+                    </div>
+                </div>
+                <!-- Table Container with scrolling -->
+                <div class="custom-card p-0" style="overflow-x: auto;">
+                    <table class="table table-dark table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Status</th>
+                                <th>Series/League</th>
+                                <th>Teams</th>
+                                <th>Start Time</th>
+                                <th>Duration</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="matchTableBody">
+                            <!-- Matches will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TEAMS & LEAGUES MANAGER (DESIGN UPDATED: TABS) -->
+            <div id="section-teams" style="display: none;">
+                <h4 class="text-white mb-4">Manage Teams & Leagues</h4>
                 
-                <div class="custom-card mb-4">
-                    <div class="row g-3">
-                        <div class="col-md-12">
-                            <label class="form-label text-info">M3U Playlist URL</label>
-                            <div class="input-group">
-                                <input type="text" id="impM3uUrl" class="form-control" placeholder="http://server.com/get.php?username=...&token=...">
-                                <button class="btn btn-primary" id="btnFetchM3u">Load Channels</button>
-                            </div>
-                            <small class="text-secondary">Enter your playlist URL directly.</small>
-                        </div>
-                    </div>
-                </div>
+                <!-- Nav Tabs -->
+                <ul class="nav nav-tabs" id="teamLeagueTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="tab-teams-btn" data-bs-toggle="tab" data-bs-target="#tab-teams-pane" type="button">Teams</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab-leagues-btn" data-bs-toggle="tab" data-bs-target="#tab-leagues-pane" type="button">Leagues / Series</button>
+                    </li>
+                </ul>
 
-                <!-- Loading Spinner -->
-                <div id="loaderM3u" class="text-center py-5" style="display: none;">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <p class="text-white mt-2">Parsing Playlist... Please wait.</p>
-                </div>
-
-                <!-- Import Table (Scrollable) -->
-                <div id="importArea" style="display: none;">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="text-white">Found Channels: <span id="foundCount" class="text-success">0</span></h5>
-                        <div class="d-flex gap-2">
-                            <select id="impTargetCat" class="form-select w-auto">
-                                <option value="">Select Target Category...</option>
+                <div class="tab-content">
+                    
+                    <!-- TAB 1: TEAMS MANAGER -->
+                    <div class="tab-pane fade show active" id="tab-teams-pane">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="text-white m-0">Team List</h5>
+                            <!-- Filter Dropdown -->
+                            <select id="teamListFilter" class="form-select w-auto" style="min-width: 200px;" onchange="renderTeamTable()">
+                                <option value="All">All Leagues</option>
                             </select>
-                            <button class="btn btn-success" id="btnConfirmImport"><i class="fa-solid fa-check"></i> Import Selected</button>
+                        </div>
+
+                        <!-- Add Team Form -->
+                        <div class="custom-card mb-3">
+                            <label class="form-label text-info">Add New Team</label>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <select id="newTeamLeague" class="form-select">
+                                        <option value="">Select League...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="text" id="newTeamName" class="form-control" placeholder="Team Name">
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="text" id="newTeamLogo" class="form-control" placeholder="Logo URL">
+                                </div>
+                                <div class="col-md-2">
+                                    <button class="btn btn-primary w-100" id="btnAddTeam">Add</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Full Width Table -->
+                        <div class="custom-card p-0 overflow-hidden">
+                            <table class="table table-dark table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-4">Logo</th>
+                                        <th>Team Name</th>
+                                        <th>League ID</th>
+                                        <th class="text-end pe-4">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="teamTableBody"></tbody>
+                            </table>
                         </div>
                     </div>
 
-                    <!-- Scrollable Container with Fixed Header -->
-                    <div class="custom-card p-0" style="max-height: 600px; overflow-y: auto; border: 1px solid #2a2d3a;">
-                        <table class="table table-dark table-hover mb-0">
-                            <thead style="position: sticky; top: 0; background-color: #1e212d; z-index: 5;">
-                                <tr>
-                                    <th class="ps-4" style="width: 50px;"><input type="checkbox" id="selectAllCh"></th>
-                                    <th>Channel Name</th>
-                                    <th>Original Link (Preview)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="m3uListBody"></tbody>
-                        </table>
+                    <!-- TAB 2: LEAGUES MANAGER -->
+                    <div class="tab-pane fade" id="tab-leagues-pane">
+                        <h5 class="text-white mb-3">League List</h5>
+                        
+                        <div class="custom-card mb-3">
+                            <label class="form-label text-warning">Add New League</label>
+                            <div class="input-group">
+                                <input type="text" id="newLeagueName" class="form-control" placeholder="e.g. IPL 2025">
+                                <button class="btn btn-primary" id="btnAddLeague">Add League</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Full Width Table -->
+                        <div class="custom-card p-0 overflow-hidden">
+                            <table class="table table-dark table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-4">League Name</th>
+                                        <th class="text-end pe-4">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leagueTableBody"></tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- SLIDER / BANNER MANAGER -->
-            <div id="section-banners" style="display: none;">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div><h4 class="text-white m-0">Home Slider Manager</h4></div>
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#bannerModal" onclick="resetBannerForm()"><i class="fa-solid fa-plus"></i> Add Slider</button>
-                </div>
-                <div class="custom-card p-0 overflow-hidden">
-                    <table class="table table-dark table-hover mb-0">
-                        <thead><tr><th class="ps-4">Sort</th><th>Banner</th><th>Desc</th><th>Link</th><th class="text-end pe-4">Actions</th></tr></thead>
-                        <tbody id="bannerTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- LEAGUE MANAGER -->
-            <div id="section-leagues" style="display: none;">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div><h4 class="text-white m-0">League Manager</h4></div>
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#leagueModal" onclick="resetLeagueForm()"><i class="fa-solid fa-plus"></i> Add League</button>
-                </div>
-                <div class="custom-card p-0 overflow-hidden">
-                    <table class="table table-dark table-hover mb-0">
-                        <thead><tr><th class="ps-4">Sort</th><th>Logo</th><th>League Name</th><th>Category</th><th>Link</th><th class="text-end pe-4">Actions</th></tr></thead>
-                        <tbody id="leagueTableBody"></tbody>
-                    </table>
                 </div>
             </div>
 
@@ -336,7 +396,7 @@
                     <h4 class="text-white m-0">App Configuration</h4>
                     <button class="btn btn-primary" id="saveSettingsBtn"><i class="fa-solid fa-save"></i> Save</button>
                 </div>
-                <div class="row">
+                <div class="row g-4">
                     <div class="col-md-6">
                         <div class="custom-card">
                             <h5 class="text-white mb-3">App Links</h5>
@@ -364,7 +424,7 @@
                     <h4 class="text-white m-0">Ads Manager</h4>
                     <button class="btn btn-primary" id="saveAdsBtn"><i class="fa-solid fa-save"></i> Save</button>
                 </div>
-                <div class="row">
+                <div class="row g-4">
                     <div class="col-md-12">
                         <div class="custom-card">
                             <div class="d-flex justify-content-between mb-3"><h5 class="text-warning mb-0">Global Script</h5><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="adPopStatus"></div></div>
@@ -386,21 +446,9 @@
                 </div>
             </div>
 
-            <!-- LEAGUE CAT MANAGER -->
-            <div id="section-league-cats" style="display: none;">
-                <h4 class="text-white mb-4">League Categories</h4>
-                <div class="custom-card">
-                    <div class="input-group">
-                        <input type="text" id="newLgCatName" class="form-control" placeholder="Enter Category Name">
-                        <button class="btn btn-primary" id="btnAddLgCat">Add</button>
-                    </div>
-                </div>
-                <div class="custom-card p-0 overflow-hidden"><table class="table table-dark table-hover mb-0"><tbody id="lgCatTableBody"></tbody></table></div>
-            </div>
-
             <!-- CHANNEL MANAGER -->
             <div id="section-channels" style="display: none;">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                     <h4 class="text-white m-0">Channel List</h4>
                     <div class="d-flex gap-2">
                         <select id="channelFilter" class="form-select w-auto"><option value="All">All Categories</option></select>
@@ -427,48 +475,111 @@
 
     <!-- ================= MODALS ================= -->
 
-    <!-- Modal: Add/Edit Banner -->
-    <div class="modal fade" id="bannerModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
+    <!-- Modal: Add/Edit Match (UPDATED FOR HRS/MINS) -->
+    <div class="modal fade" id="matchModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="bnrModalTitle">Add New Slider</h5>
+                    <h5 class="modal-title" id="matchModalTitle">Add New Match</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <input type="hidden" id="bnrEditKey">
-                    <div class="mb-3"><label class="form-label text-warning">Image URL</label><input type="text" class="form-control" id="bnrImage"></div>
-                    <div class="mb-3"><label class="form-label">Title</label><input type="text" class="form-control" id="bnrTitle"></div>
-                    <div class="mb-3"><label class="form-label text-warning">Stream Link</label><input type="text" class="form-control" id="bnrLink"></div>
-                    <div class="mb-3"><label class="form-label">Extra Links</label><input type="text" class="form-control mb-2" id="bnrLink2"><input type="text" class="form-control" id="bnrLink3"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveBannerBtn">Save</button>
-                </div>
-            </div>
-        </div>
-    </div>
+                    <input type="hidden" id="matchEditKey">
+                    <div class="row g-3">
+                        <!-- League Select (Filters Teams) -->
+                        <div class="col-md-12">
+                            <label class="form-label text-warning">Select Series/League</label>
+                            <!-- Note: onchange triggers filtration -->
+                            <select class="form-select" id="mSeriesSelect" onchange="filterTeamsByLeague(this.value)">
+                                <option value="">Select League...</option>
+                            </select>
+                        </div>
 
-    <!-- Modal: Add/Edit League -->
-    <div class="modal fade" id="leagueModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="lgModalTitle">Add New League</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="lgEditKey">
-                    <div class="mb-3"><label class="form-label">Name</label><input type="text" class="form-control" id="lgName"></div>
-                    <div class="mb-3"><label class="form-label">Category</label><select class="form-select" id="lgCat"><option value="">Select...</option></select></div>
-                    <div class="mb-3"><label class="form-label">Logo</label><input type="text" class="form-control" id="lgLogo"></div>
-                    <div class="mb-3"><label class="form-label text-warning">Link 1</label><input type="text" class="form-control" id="lgSource1"></div>
-                    <div class="mb-3"><label class="form-label">Extra Links</label><input type="text" class="form-control mb-2" id="lgLink2"><input type="text" class="form-control" id="lgLink3"></div>
+                        <!-- Team 1 -->
+                        <div class="col-md-6">
+                            <label class="form-label">Team 1</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-dark border-secondary"><img id="mT1Preview" src="" style="width:20px; height:20px; object-fit:contain;"></span>
+                                <select class="form-select" id="mT1Select" onchange="updateMatchPreview('1')">
+                                    <option value="">Select League First...</option>
+                                </select>
+                            </div>
+                            <input type="hidden" id="mT1Name">
+                            <input type="hidden" id="mT1Logo">
+                        </div>
+
+                        <!-- Team 2 -->
+                        <div class="col-md-6">
+                            <label class="form-label">Team 2</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-dark border-secondary"><img id="mT2Preview" src="" style="width:20px; height:20px; object-fit:contain;"></span>
+                                <select class="form-select" id="mT2Select" onchange="updateMatchPreview('2')">
+                                    <option value="">Select League First...</option>
+                                </select>
+                            </div>
+                            <input type="hidden" id="mT2Name">
+                            <input type="hidden" id="mT2Logo">
+                        </div>
+                        
+                        <!-- TIME AND DURATION (UPDATED TO HOURS AND MINUTES) -->
+                        <div class="col-md-6">
+                            <label class="form-label text-info">Match Start Time</label>
+                            <input type="datetime-local" class="form-control" id="mStartTime">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-success">Live Duration</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="mDurationHrs" placeholder="Hrs" min="0" value="3">
+                                <span class="input-group-text bg-dark text-white">hr</span>
+                                <input type="number" class="form-control" id="mDurationMins" placeholder="Min" min="0" max="59" value="0">
+                                <span class="input-group-text bg-dark text-white">min</span>
+                            </div>
+                        </div>
+
+                        <!-- MULTI STREAM LINKS -->
+                        <div class="col-md-12">
+                            <hr class="border-secondary">
+                            <h6 class="text-white mb-3">Stream Links</h6>
+                        </div>
+
+                        <!-- Link 1 -->
+                        <div class="col-md-12 mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label text-danger m-0">Server 1 (Main)</label>
+                                <select class="form-select form-select-sm w-auto bg-dark text-white border-secondary channel-quick-select" onchange="copyChannelLink('mLink', this.value)">
+                                    <option value="">Select from Channel...</option>
+                                </select>
+                            </div>
+                            <input type="text" class="form-control" id="mLink" placeholder="Paste Link 1">
+                        </div>
+
+                        <!-- Link 2 -->
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label m-0">Server 2</label>
+                                <select class="form-select form-select-sm w-auto bg-dark text-white border-secondary channel-quick-select" onchange="copyChannelLink('mLink2', this.value)">
+                                    <option value="">Select...</option>
+                                </select>
+                            </div>
+                            <input type="text" class="form-control" id="mLink2" placeholder="Paste Link 2">
+                        </div>
+
+                        <!-- Link 3 -->
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label m-0">Server 3</label>
+                                <select class="form-select form-select-sm w-auto bg-dark text-white border-secondary channel-quick-select" onchange="copyChannelLink('mLink3', this.value)">
+                                    <option value="">Select...</option>
+                                </select>
+                            </div>
+                            <input type="text" class="form-control" id="mLink3" placeholder="Paste Link 3">
+                        </div>
+
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveLeagueBtn">Save</button>
+                    <button type="button" class="btn btn-primary" id="saveMatchBtn">Save Match</button>
                 </div>
             </div>
         </div>
@@ -488,7 +599,7 @@
                     <div class="mb-3"><label class="form-label">Category</label><select class="form-select" id="chCat"><option value="">Select...</option></select></div>
                     <div class="mb-3"><label class="form-label">Logo</label><input type="text" class="form-control" id="chLogo"></div>
                     <div class="mb-3"><label class="form-label text-warning">Link 1</label><input type="text" class="form-control" id="chLink"></div>
-                    <div class="mb-2"><input type="text" class="form-control mb-2" id="chLink2"><input type="text" class="form-control" id="chLink3"></div>
+                    <div class="mb-2"><input type="text" class="form-control mb-2" id="chLink2" placeholder="Link 2 (Optional)"><input type="text" class="form-control" id="chLink3" placeholder="Link 3 (Optional)"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -501,12 +612,21 @@
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- UI Logic -->
+    <script>
+        // Mobile Sidebar Toggle
+        function toggleMobileSidebar() {
+            document.getElementById('sidebar').classList.toggle('mobile-active');
+        }
+    </script>
+
     <!-- FIREBASE LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
         import { getDatabase, ref, push, set, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
+        // Your Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDwcMREQuQiTDiJ8prnPkNzxV5eq2U097k",
             authDomain: "sportspro-fb7b9.firebaseapp.com",
@@ -533,12 +653,9 @@
         // Check Login State
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // User is signed in
                 loginSection.style.display = 'none';
                 adminPanel.style.display = 'block';
-                // Load data only if needed (already managed by onValue listeners below)
             } else {
-                // User is signed out
                 loginSection.style.display = 'flex';
                 adminPanel.style.display = 'none';
             }
@@ -554,7 +671,6 @@
                 return;
             }
 
-            // UI Loading state
             btnText.style.display = 'none';
             btnSpinner.style.display = 'inline-block';
             btnLogin.disabled = true;
@@ -568,7 +684,6 @@
                     Swal.fire('Login Failed', error.message, 'error');
                 })
                 .finally(() => {
-                    // Reset UI
                     btnText.style.display = 'inline-block';
                     btnSpinner.style.display = 'none';
                     btnLogin.disabled = false;
@@ -587,11 +702,7 @@
                 confirmButtonText: 'Yes, logout'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    signOut(auth).then(() => {
-                        // Sign-out successful.
-                    }).catch((error) => {
-                        console.error(error);
-                    });
+                    signOut(auth);
                 }
             });
         });
@@ -600,12 +711,10 @@
 
         // Modal Instances
         const channelModal = new bootstrap.Modal(document.getElementById('channelModal'));
-        const leagueModal = new bootstrap.Modal(document.getElementById('leagueModal'));
-        const bannerModal = new bootstrap.Modal(document.getElementById('bannerModal'));
+        const matchModal = new bootstrap.Modal(document.getElementById('matchModal'));
 
         // ================= DASHBOARD STATS & GRAPH =================
         onValue(ref(db, 'active_users'), (snapshot) => { document.getElementById('activeUsers').innerText = snapshot.exists() ? snapshot.size : 0; });
-        onValue(ref(db, 'leagues'), (snapshot) => { document.getElementById('totalLeagues').innerText = snapshot.exists() ? snapshot.size : 0; });
         onValue(ref(db, 'channels'), (snapshot) => { document.getElementById('totalChannels').innerText = snapshot.exists() ? snapshot.size : 0; });
         
         let installChartInstance = null;
@@ -647,7 +756,10 @@
         });
 
         function renderChart(labels, data) {
-            const ctx = document.getElementById('installChart').getContext('2d');
+            const ctxCanvas = document.getElementById('installChart');
+            if(!ctxCanvas) return;
+            const ctx = ctxCanvas.getContext('2d');
+            
             if (installChartInstance) installChartInstance.destroy();
 
             installChartInstance = new Chart(ctx, {
@@ -678,59 +790,441 @@
             });
         }
 
-        // ================= BANNER MANAGER =================
-        onValue(ref(db, 'banners'), (snapshot) => {
-            const count = snapshot.exists() ? snapshot.size : 0;
-            document.getElementById('totalBanners').innerText = count;
-            const tbody = document.getElementById('bannerTableBody');
-            tbody.innerHTML = '';
-            if(snapshot.exists()) {
-                const arr = [];
-                snapshot.forEach((child) => { arr.push({key: child.key, ...child.val()}); });
-                arr.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-                arr.forEach(v => {
-                    const safeTitle = (v.title || '').replace(/'/g, "\\'");
-                    tbody.innerHTML += `<tr data-id="${v.key}" class="draggable-row"><td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td><td class="ps-2"><img src="${v.image}" class="banner-img-preview" onerror="this.src='https://via.placeholder.com/120x60'"></td><td class="text-white">${v.title || '<span class="text-secondary">No Title</span>'}</td><td><span class="badge bg-secondary text-truncate" style="max-width: 200px;">${v.link}</span></td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-info me-2" onclick="window.editBanner('${v.key}', '${v.image}', '${v.link}', '${v.link2 || ''}', '${v.link3 || ''}', '${safeTitle}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteBanner('${v.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+        // ================= LEAGUE & TEAM MANAGER =================
+        
+        // 1. LEAGUE LOGIC
+        document.getElementById('btnAddLeague').addEventListener('click', () => {
+            const name = document.getElementById('newLeagueName').value;
+            if(name) {
+                push(ref(db, 'leagues'), { name: name }).then(() => {
+                    document.getElementById('newLeagueName').value = '';
+                    Swal.fire('Success', 'League Added', 'success');
                 });
             }
         });
-        new Sortable(document.getElementById('bannerTableBody'), { animation: 150, handle: '.fa-bars', onEnd: function (evt) { document.querySelectorAll('#bannerTableBody tr').forEach((row, index) => { update(ref(db, 'banners/' + row.getAttribute('data-id')), { sortOrder: index }); }); } });
-        document.getElementById('saveBannerBtn').addEventListener('click', () => {
-            const key = document.getElementById('bnrEditKey').value;
-            const data = { image: document.getElementById('bnrImage').value, link: document.getElementById('bnrLink').value, link2: document.getElementById('bnrLink2').value, link3: document.getElementById('bnrLink3').value, title: document.getElementById('bnrTitle').value, sortOrder: key ? undefined : 9999 };
-            if(key) delete data.sortOrder;
-            if(!data.image || !data.link) { Swal.fire('Error', 'Image and Main Link are required!', 'error'); return; }
-            if(key) { update(ref(db, 'banners/' + key), data).then(() => { Swal.fire('Success', 'Updated', 'success'); bannerModal.hide(); }); } else { push(ref(db, 'banners'), data).then(() => { Swal.fire('Success', 'Added', 'success'); bannerModal.hide(); }); }
-        });
-        window.editBanner = function(key, image, link, link2, link3, title) { document.getElementById('bnrEditKey').value = key; document.getElementById('bnrImage').value = image; document.getElementById('bnrLink').value = link; document.getElementById('bnrLink2').value = link2; document.getElementById('bnrLink3').value = link3; document.getElementById('bnrTitle').value = title; document.getElementById('bnrModalTitle').innerText = "Edit Slider"; bannerModal.show(); }
-        window.deleteBanner = function(key) { Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((res) => { if (res.isConfirmed) remove(ref(db, 'banners/' + key)); }); }
-        window.resetBannerForm = function() { document.getElementById('bnrEditKey').value = ""; document.getElementById('bnrImage').value = ""; document.getElementById('bnrLink').value = ""; document.getElementById('bnrLink2').value = ""; document.getElementById('bnrLink3').value = ""; document.getElementById('bnrTitle').value = ""; document.getElementById('bnrModalTitle').innerText = "Add New Slider"; }
-
-        // ================= LEAGUE FUNCTIONS =================
+        
+        // Load Leagues into Table & League Dropdowns (Match Modal & Team Manager)
         onValue(ref(db, 'leagues'), (snapshot) => {
-            const tbody = document.getElementById('leagueTableBody');
-            tbody.innerHTML = '';
+            const table = document.getElementById('leagueTableBody');
+            const matchSelect = document.getElementById('mSeriesSelect');
+            const teamLeagueSelect = document.getElementById('newTeamLeague');
+            const teamListFilter = document.getElementById('teamListFilter'); 
+
+            table.innerHTML = '';
+            // Reset Selects but keep default option
+            matchSelect.innerHTML = '<option value="">Select League...</option>';
+            teamLeagueSelect.innerHTML = '<option value="">Select League...</option>';
+            teamListFilter.innerHTML = '<option value="All">All Leagues</option>'; // Reset Filter
+            
             if(snapshot.exists()) {
-                const leaguesArr = [];
-                snapshot.forEach((child) => { leaguesArr.push({key: child.key, ...child.val()}); });
-                leaguesArr.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-                leaguesArr.forEach(v => {
-                    const shortLink = v.link.length > 20 ? v.link.substring(0, 20) + '...' : v.link;
-                    tbody.innerHTML += `<tr data-id="${v.key}" class="draggable-row"><td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td><td class="ps-2"><img src="${v.logo}" class="channel-img-preview" onerror="this.src='https://via.placeholder.com/40'"></td><td class="text-white fw-bold">${v.name}</td><td><span class="badge bg-info text-dark">${v.category || 'N/A'}</span></td><td><span class="badge bg-secondary text-truncate" style="max-width: 150px;">${shortLink}</span></td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-info me-2" onclick="window.editLeague('${v.key}', '${v.name}', '${v.category || ''}', '${v.logo}', '${v.link}', '${v.link2||''}', '${v.link3||''}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteLeague('${v.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+                snapshot.forEach(child => {
+                    const l = child.val();
+                    const key = child.key;
+                    
+                    // Add to Table
+                    table.innerHTML += `
+                        <tr>
+                            <td class="ps-4">${l.name}</td>
+                            <td class="text-end pe-4">
+                                <button class="btn btn-sm btn-outline-danger" onclick="window.deleteLeague('${key}')"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>`;
+                    
+                    // Add to Dropdowns. IMPORTANT: Value is ID, but we save Name attribute to pull text later
+                    const opt = `<option value="${key}" data-name="${l.name}">${l.name}</option>`;
+                    matchSelect.innerHTML += opt;
+                    teamLeagueSelect.innerHTML += opt;
+                    teamListFilter.innerHTML += opt; // Populate Filter
                 });
             }
         });
-        new Sortable(document.getElementById('leagueTableBody'), { animation: 150, handle: '.fa-bars', onEnd: function (evt) { document.querySelectorAll('#leagueTableBody tr').forEach((row, index) => { update(ref(db, 'leagues/' + row.getAttribute('data-id')), { sortOrder: index }); }); } });
-        document.getElementById('saveLeagueBtn').addEventListener('click', () => {
-            const key = document.getElementById('lgEditKey').value;
-            const data = { name: document.getElementById('lgName').value, category: document.getElementById('lgCat').value, logo: document.getElementById('lgLogo').value, link: document.getElementById('lgSource1').value, link2: document.getElementById('lgLink2').value, link3: document.getElementById('lgLink3').value, sortOrder: key ? undefined : 9999 };
-            if(key) delete data.sortOrder;
-            if(!data.name || !data.link) { Swal.fire('Error', 'Required fields missing!', 'error'); return; }
-            if(key) { update(ref(db, 'leagues/' + key), data).then(() => { Swal.fire('Success', 'Updated', 'success'); leagueModal.hide(); }); } else { push(ref(db, 'leagues'), data).then(() => { Swal.fire('Success', 'Added', 'success'); leagueModal.hide(); }); }
+        window.deleteLeague = (key) => remove(ref(db, 'leagues/' + key));
+
+        // 2. TEAM LOGIC (UPDATED WITH FILTERING)
+        window.allTeams = []; // Cache for filtering logic
+        
+        document.getElementById('btnAddTeam').addEventListener('click', () => {
+            const leagueId = document.getElementById('newTeamLeague').value;
+            const name = document.getElementById('newTeamName').value;
+            const logo = document.getElementById('newTeamLogo').value;
+
+            if(name && leagueId) {
+                // Save team WITH leagueId
+                push(ref(db, 'teams'), { name: name, logo: logo, leagueId: leagueId }).then(() => {
+                    document.getElementById('newTeamName').value = '';
+                    document.getElementById('newTeamLogo').value = '';
+                    Swal.fire('Success', 'Team Added', 'success');
+                });
+            } else {
+                Swal.fire('Error', 'Please select a League and enter Team Name', 'error');
+            }
         });
-        window.editLeague = function(key, name, cat, logo, l1, l2, l3) { document.getElementById('lgEditKey').value = key; document.getElementById('lgName').value = name; document.getElementById('lgCat').value = cat; document.getElementById('lgLogo').value = logo; document.getElementById('lgSource1').value = l1; document.getElementById('lgLink2').value = l2; document.getElementById('lgLink3').value = l3; document.getElementById('lgModalTitle').innerText = "Edit League"; leagueModal.show(); }
-        window.deleteLeague = function(key) { Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((res) => { if (res.isConfirmed) remove(ref(db, 'leagues/' + key)); }); }
-        window.resetLeagueForm = function() { document.getElementById('lgEditKey').value = ""; document.getElementById('lgName').value = ""; document.getElementById('lgCat').value = ""; document.getElementById('lgLogo').value = ""; document.getElementById('lgSource1').value = ""; document.getElementById('lgLink2').value = ""; document.getElementById('lgLink3').value = ""; document.getElementById('lgModalTitle').innerText = "Add New League"; }
+
+        // Load Teams into Cache Only (Rendering handled by function)
+        onValue(ref(db, 'teams'), (snapshot) => {
+            window.allTeams = [];
+            if(snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const t = child.val();
+                    const key = child.key;
+                    window.allTeams.push({key: key, ...t});
+                });
+            }
+            // Trigger initial render
+            window.renderTeamTable(); 
+        });
+
+        // NEW: Render Team Table based on Filter
+        window.renderTeamTable = () => {
+            const table = document.getElementById('teamTableBody');
+            const filterValue = document.getElementById('teamListFilter').value;
+            table.innerHTML = '';
+
+            let teamsToShow = window.allTeams;
+            
+            // Filter if not "All"
+            if (filterValue !== "All") {
+                teamsToShow = window.allTeams.filter(t => t.leagueId === filterValue);
+            }
+
+            if (teamsToShow.length === 0) {
+                table.innerHTML = `<tr><td colspan="4" class="text-center text-secondary">No teams found for selected league.</td></tr>`;
+                return;
+            }
+
+            teamsToShow.forEach(t => {
+                table.innerHTML += `
+                    <tr>
+                        <td class="ps-4"><img src="${t.logo}" class="team-logo-sm" onerror="this.src='https://via.placeholder.com/30'"></td>
+                        <td>${t.name}</td>
+                        <td class="text-secondary small">${t.leagueId || '-'}</td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-outline-danger" onclick="window.deleteTeam('${t.key}')"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+            });
+        };
+
+        window.deleteTeam = (key) => remove(ref(db, 'teams/' + key));
+
+
+        // ================= MATCH MANAGER (DEPENDENT DROPDOWN LOGIC) =================
+        
+        // 1. FILTER TEAMS WHEN LEAGUE IS SELECTED
+        window.filterTeamsByLeague = (leagueId) => {
+            const select1 = document.getElementById('mT1Select');
+            const select2 = document.getElementById('mT2Select');
+            
+            // Clear current options
+            select1.innerHTML = '<option value="">Select Team...</option>';
+            select2.innerHTML = '<option value="">Select Team...</option>';
+            
+            // Clear Previews
+            document.getElementById('mT1Preview').src = "";
+            document.getElementById('mT2Preview').src = "";
+
+            if (!leagueId) return;
+
+            // Filter Global Teams Cache
+            const filteredTeams = window.allTeams.filter(t => t.leagueId === leagueId);
+
+            if(filteredTeams.length === 0) {
+                const opt = '<option value="">No teams in this league</option>';
+                select1.innerHTML = opt;
+                select2.innerHTML = opt;
+            } else {
+                filteredTeams.forEach(t => {
+                    const opt = `<option value="${t.key}">${t.name}</option>`;
+                    select1.innerHTML += opt;
+                    select2.innerHTML += opt;
+                });
+            }
+        };
+
+        // 2. MATCH MANAGER LOGIC
+        window.allMatches = [];
+        onValue(ref(db, 'matches'), (snapshot) => {
+            const tbody = document.getElementById('matchTableBody');
+            window.allMatches = []; 
+            const now = Date.now();
+
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    window.allMatches.push({ key: child.key, ...child.val() });
+                });
+                
+                window.allMatches.sort((a, b) => (Number(b.startTime) || 0) - (Number(a.startTime) || 0));
+
+                let tableHtml = '';
+
+                window.allMatches.forEach(m => {
+                    const start = Number(m.startTime) || 0;
+                    const end = Number(m.endTime) || (start + (3 * 3600000));
+                    
+                    let statusBadge = '';
+                    let rowClass = '';
+
+                    if (now > end) {
+                        statusBadge = '<span class="badge bg-danger">EXPIRED</span>';
+                        rowClass = 'expired-row';
+                    } else if (now >= start && now <= end) {
+                        statusBadge = '<span class="badge bg-success">LIVE NOW</span>';
+                    } else {
+                        statusBadge = '<span class="badge bg-warning text-dark">UPCOMING</span>';
+                    }
+
+                    const startDate = start ? new Date(start).toLocaleString() : 'N/A';
+                    
+                    // Display friendly duration
+                    const diffMs = end - start;
+                    const hrs = Math.floor(diffMs / 3600000);
+                    const mins = Math.round((diffMs % 3600000) / 60000);
+                    const durationStr = `${hrs}h ${mins}m`;
+
+                    tableHtml += `
+                        <tr class="${rowClass}">
+                            <td class="ps-4">${statusBadge}</td>
+                            <td class="text-white">${m.series || 'N/A'}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2 text-white">
+                                    <img src="${m.team1_logo}" class="team-logo-sm" onerror="this.src='https://via.placeholder.com/30'">
+                                    ${m.team1_name}
+                                    <span class="text-secondary mx-1">VS</span>
+                                    <img src="${m.team2_logo}" class="team-logo-sm" onerror="this.src='https://via.placeholder.com/30'">
+                                    ${m.team2_name}
+                                </div>
+                            </td>
+                            <td class="text-secondary">${startDate}</td>
+                            <td class="text-white">${durationStr}</td>
+                            <td class="text-end pe-4">
+                                <button class="btn btn-sm btn-outline-info me-2" onclick="window.editMatch('${m.key}')"><i class="fa-solid fa-pen"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="window.deleteMatch('${m.key}')"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                tbody.innerHTML = tableHtml;
+
+            } else {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-3">No matches found</td></tr>';
+            }
+        });
+
+        // MATCH MODAL HELPER: Auto-fill Logo when Team is Selected
+        window.updateMatchPreview = (num) => {
+            const select = document.getElementById(`mT${num}Select`);
+            const preview = document.getElementById(`mT${num}Preview`);
+            const nameInput = document.getElementById(`mT${num}Name`);
+            const logoInput = document.getElementById(`mT${num}Logo`);
+            
+            const teamKey = select.value;
+            const team = window.allTeams.find(t => t.key === teamKey);
+
+            if(team) {
+                preview.src = team.logo;
+                nameInput.value = team.name;
+                logoInput.value = team.logo;
+            } else {
+                preview.src = "";
+                nameInput.value = "";
+                logoInput.value = "";
+            }
+        };
+
+        // MATCH MODAL HELPER: Copy Channel Link (Generic for 3 Links)
+        window.copyChannelLink = (inputId, url) => {
+            if(url) document.getElementById(inputId).value = url;
+        };
+
+        // Save Match
+        document.getElementById('saveMatchBtn').addEventListener('click', () => {
+            const key = document.getElementById('matchEditKey').value;
+            
+            const seriesSelect = document.getElementById('mSeriesSelect');
+            // Get League ID for data logic if needed, but we save Name for Display
+            const seriesId = seriesSelect.value;
+            const seriesName = seriesSelect.options[seriesSelect.selectedIndex].getAttribute('data-name') || seriesSelect.value;
+            
+            const t1 = document.getElementById('mT1Name').value;
+            const l1 = document.getElementById('mT1Logo').value;
+            const t2 = document.getElementById('mT2Name').value;
+            const l2 = document.getElementById('mT2Logo').value;
+            
+            const link = document.getElementById('mLink').value;
+            const link2 = document.getElementById('mLink2').value;
+            const link3 = document.getElementById('mLink3').value;
+            const startStr = document.getElementById('mStartTime').value;
+            
+            // UPDATED: Use Hours and Minutes inputs
+            const durHrs = parseInt(document.getElementById('mDurationHrs').value) || 0;
+            const durMins = parseInt(document.getElementById('mDurationMins').value) || 0;
+
+            if (!t1 || !t2 || !startStr || !link) {
+                return Swal.fire('Error', 'Teams, Start Time and Main Link are required!', 'error');
+            }
+            
+            if (durHrs === 0 && durMins === 0) {
+                 return Swal.fire('Error', 'Please set a duration greater than 0.', 'error');
+            }
+
+            const startTime = new Date(startStr).getTime();
+            // Calculate End Time based on Hrs + Mins
+            const totalDurationMs = (durHrs * 3600000) + (durMins * 60000);
+            const endTime = startTime + totalDurationMs; 
+            
+            const name = `${t1} vs ${t2}`;
+
+            const data = {
+                name: name,
+                series: seriesName, // Saving Name, not ID
+                leagueId: seriesId, // Optional: Saving ID for future ref
+                team1_name: t1, team1_logo: l1,
+                team2_name: t2, team2_logo: l2,
+                link: link,
+                link2: link2,
+                link3: link3,
+                startTime: startTime,
+                endTime: endTime
+            };
+
+            if (key) {
+                update(ref(db, 'matches/' + key), data).then(() => {
+                    Swal.fire('Updated', 'Match updated successfully', 'success');
+                    matchModal.hide();
+                });
+            } else {
+                push(ref(db, 'matches'), data).then(() => {
+                    Swal.fire('Added', 'Match added successfully', 'success');
+                    matchModal.hide();
+                });
+            }
+        });
+
+        // Edit Match Helper
+        window.editMatch = (key) => {
+            const m = window.allMatches.find(x => x.key === key);
+            if (!m) return;
+            
+            document.getElementById('matchEditKey').value = key;
+
+            // Logic to restore state (Bit complex due to dynamic dependent dropdowns)
+            
+            // 1. Set League/Series Dropdown
+            const leagueSelect = document.getElementById('mSeriesSelect');
+            // Try to find option by ID (if m.leagueId exists) or Name
+            let leagueOption = null;
+            if(m.leagueId) {
+                leagueSelect.value = m.leagueId;
+            } else {
+                // Fallback: Loop to find option with text matching series name
+                for (let i = 0; i < leagueSelect.options.length; i++) {
+                    if (leagueSelect.options[i].text === m.series) {
+                        leagueSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            // 2. Trigger Filter Logic Immediately so Team Options appear
+            window.filterTeamsByLeague(leagueSelect.value);
+            
+            // 3. Select Teams (Find by Name since ID might change if re-added)
+            const t1Obj = window.allTeams.find(t => t.name === m.team1_name);
+            const t2Obj = window.allTeams.find(t => t.name === m.team2_name);
+            
+            document.getElementById('mT1Select').value = t1Obj ? t1Obj.key : "";
+            document.getElementById('mT2Select').value = t2Obj ? t2Obj.key : "";
+            
+            // 4. Fill Hidden/Visuals
+            document.getElementById('mT1Name').value = m.team1_name;
+            document.getElementById('mT1Logo').value = m.team1_logo;
+            document.getElementById('mT1Preview').src = m.team1_logo;
+            
+            document.getElementById('mT2Name').value = m.team2_name;
+            document.getElementById('mT2Logo').value = m.team2_logo;
+            document.getElementById('mT2Preview').src = m.team2_logo;
+
+            document.getElementById('mLink').value = m.link;
+            document.getElementById('mLink2').value = m.link2 || "";
+            document.getElementById('mLink3').value = m.link3 || "";
+
+            if(m.startTime) {
+                const d = new Date(m.startTime);
+                // Trick to get local time into datetime-local input
+                const localISOTime = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                document.getElementById('mStartTime').value = localISOTime;
+            }
+
+            // UPDATED: Calculate Hours and Minutes from start/end diff
+            if(m.endTime && m.startTime) {
+                const diffMs = m.endTime - m.startTime;
+                const hrs = Math.floor(diffMs / 3600000);
+                const mins = Math.round((diffMs % 3600000) / 60000);
+                document.getElementById('mDurationHrs').value = hrs;
+                document.getElementById('mDurationMins').value = mins;
+            } else {
+                document.getElementById('mDurationHrs').value = 3;
+                document.getElementById('mDurationMins').value = 0;
+            }
+
+            document.getElementById('matchModalTitle').innerText = "Edit Match";
+            matchModal.show();
+        };
+
+        window.deleteMatch = (key) => {
+            Swal.fire({ title: 'Delete Match?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((res) => {
+                if (res.isConfirmed) remove(ref(db, 'matches/' + key));
+            });
+        };
+
+        window.clearExpiredMatches = () => {
+            const now = Date.now();
+            let toDelete = [];
+            window.allMatches.forEach(m => {
+                if (m.endTime < now) toDelete.push(m.key);
+            });
+
+            if (toDelete.length === 0) return Swal.fire('Info', 'No expired matches found.', 'info');
+
+            Swal.fire({
+                title: `Delete ${toDelete.length} Expired Matches?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Yes, Delete All'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    toDelete.forEach(k => remove(ref(db, 'matches/' + k)));
+                    Swal.fire('Deleted!', 'Expired matches removed.', 'success');
+                }
+            });
+        };
+
+        window.resetMatchForm = () => {
+            document.getElementById('matchEditKey').value = "";
+            document.getElementById('mSeriesSelect').value = "";
+            document.getElementById('mT1Select').innerHTML = '<option value="">Select League First...</option>';
+            document.getElementById('mT2Select').innerHTML = '<option value="">Select League First...</option>';
+            document.getElementById('mT1Preview').src = "";
+            document.getElementById('mT2Preview').src = "";
+            document.getElementById('mT1Name').value = "";
+            document.getElementById('mT1Logo').value = "";
+            document.getElementById('mT2Name').value = "";
+            document.getElementById('mT2Logo').value = "";
+            
+            document.getElementById('mLink').value = "";
+            document.getElementById('mLink2').value = "";
+            document.getElementById('mLink3').value = "";
+            document.getElementById('mStartTime').value = "";
+            // Reset to defaults
+            document.getElementById('mDurationHrs').value = "3";
+            document.getElementById('mDurationMins').value = "0";
+            document.getElementById('matchModalTitle').innerText = "Add New Match";
+            
+            // Reset channel quick selects
+            document.querySelectorAll('.channel-quick-select').forEach(el => el.value = "");
+        };
 
         // ================= APP SETTINGS =================
         const settingsRef = ref(db, 'app_settings');
@@ -772,159 +1266,64 @@
             set(adsRef, adsData).then(() => Swal.fire('Saved!', 'Ad settings updated.', 'success'));
         });
 
-        // ================= LEAGUE CATS & CHANNELS =================
-        new Sortable(document.getElementById('lgCatTableBody'), { animation: 150, handle: '.fa-bars', onEnd: function (evt) { document.querySelectorAll('#lgCatTableBody tr').forEach((row, index) => { update(ref(db, 'league_categories/' + row.getAttribute('data-id')), { sortOrder: index }); }); } });
-        document.getElementById('btnAddLgCat').addEventListener('click', () => { const catName = document.getElementById('newLgCatName').value; if(catName) { push(ref(db, 'league_categories'), { name: catName, sortOrder: 9999 }).then(() => { Swal.fire('Success', 'Category Added!', 'success'); document.getElementById('newLgCatName').value = ''; }); } });
-        window.editLgCat = async function(key, oldName) { const { value: newName } = await Swal.fire({ title: 'Rename Category', input: 'text', inputValue: oldName, showCancelButton: true }); if (newName && newName !== oldName) { update(ref(db, 'league_categories/' + key), { name: newName }); } };
-        onValue(ref(db, 'league_categories'), (snapshot) => { const tbody = document.getElementById('lgCatTableBody'); const dropdown = document.getElementById('lgCat'); tbody.innerHTML = ''; dropdown.innerHTML = '<option value="">Select Category...</option>'; if(snapshot.exists()) { const catArr = []; snapshot.forEach((child) => { catArr.push({key: child.key, ...child.val()}); }); catArr.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)); catArr.forEach(v => { tbody.innerHTML += `<tr data-id="${v.key}" class="draggable-row"><td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td><td>${v.name}</td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-warning me-2" onclick="window.editLgCat('${v.key}', '${v.name}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteLgCat('${v.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`; dropdown.innerHTML += `<option value="${v.name}">${v.name}</option>`; }); } });
-        window.deleteLgCat = function(key) { remove(ref(db, 'league_categories/' + key)); }
-
+        // ================= CHANNELS =================
         window.allChannelsData = [];
         document.getElementById('channelFilter').addEventListener('change', function() { renderChannelTable(this.value); });
         function renderChannelTable(filterCat = "All") { const tbody = document.getElementById('channelTableBody'); tbody.innerHTML = ''; let displayData = window.allChannelsData; if(filterCat !== "All") { displayData = window.allChannelsData.filter(ch => ch.category === filterCat); } displayData.forEach(v => { tbody.innerHTML += `<tr data-id="${v.key}" class="draggable-row"><td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td><td class="ps-2"><img src="${v.logo}" class="channel-img-preview" onerror="this.src='https://via.placeholder.com/40'"></td><td class="text-white fw-bold">${v.name}</td><td><span class="badge bg-secondary">${v.category}</span></td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-info me-2" onclick="window.editChannel('${v.key}', '${v.name}', '${v.logo}', '${v.category}', '${v.link}', '${v.link2 || ''}', '${v.link3 || ''}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteChannel('${v.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`; }); }
-        onValue(ref(db, 'channels'), (snapshot) => { let count = 0; window.allChannelsData = []; if(snapshot.exists()) { snapshot.forEach((child) => { window.allChannelsData.push({key: child.key, ...child.val()}); }); window.allChannelsData.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)); count = window.allChannelsData.length; } document.getElementById('totalChannels').innerText = count; renderChannelTable(document.getElementById('channelFilter').value); });
+        onValue(ref(db, 'channels'), (snapshot) => { 
+            let count = 0; 
+            window.allChannelsData = []; 
+            const channelSelects = document.querySelectorAll('.channel-quick-select');
+            
+            // Clear Selects
+            channelSelects.forEach(sel => sel.innerHTML = '<option value="">Select...</option>');
+
+            if(snapshot.exists()) { 
+                snapshot.forEach((child) => { 
+                    const data = {key: child.key, ...child.val()};
+                    window.allChannelsData.push(data);
+                    
+                    // Populate ALL Channel Selects in Match Modal
+                    const opt = `<option value="${data.link}">${data.name}</option>`;
+                    channelSelects.forEach(sel => sel.innerHTML += opt);
+                }); 
+                window.allChannelsData.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)); 
+                count = window.allChannelsData.length; 
+            } 
+            document.getElementById('totalChannels').innerText = count; 
+            renderChannelTable(document.getElementById('channelFilter').value); 
+        });
+
         document.getElementById('saveChannelBtn').addEventListener('click', () => { const key = document.getElementById('chEditKey').value; const data = { name: document.getElementById('chName').value, category: document.getElementById('chCat').value, logo: document.getElementById('chLogo').value, link: document.getElementById('chLink').value, link2: document.getElementById('chLink2').value, link3: document.getElementById('chLink3').value, sortOrder: key ? undefined : 9999 }; if(key) delete data.sortOrder; if(!data.name || !data.link) { Swal.fire('Error', 'Data missing!', 'error'); return; } if(key) { update(ref(db, 'channels/' + key), data).then(() => { Swal.fire('Success', 'Updated', 'success'); channelModal.hide(); }); } else { push(ref(db, 'channels'), data).then(() => { Swal.fire('Success', 'Added', 'success'); channelModal.hide(); }); } });
         new Sortable(document.getElementById('channelTableBody'), { animation: 150, handle: '.fa-bars', onEnd: function (evt) { document.querySelectorAll('#channelTableBody tr').forEach((row, index) => { update(ref(db, 'channels/' + row.getAttribute('data-id')), { sortOrder: index }); }); } });
         window.editChannel = function(key, name, logo, cat, link, link2, link3) { document.getElementById('chEditKey').value = key; document.getElementById('chName').value = name; document.getElementById('chLogo').value = logo; document.getElementById('chCat').value = cat; document.getElementById('chLink').value = link; document.getElementById('chLink2').value = link2; document.getElementById('chLink3').value = link3; document.getElementById('chModalTitle').innerText = "Edit Channel"; channelModal.show(); }
         window.deleteChannel = function(key) { Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((res) => { if (res.isConfirmed) remove(ref(db, 'channels/' + key)); }); }
         window.resetForm = function() { document.getElementById('chEditKey').value = ""; document.getElementById('chName').value = ""; document.getElementById('chLogo').value = ""; const filterVal = document.getElementById('channelFilter').value; document.getElementById('chCat').value = filterVal === "All" ? "" : filterVal; document.getElementById('chLink').value = ""; document.getElementById('chLink2').value = ""; document.getElementById('chLink3').value = ""; document.getElementById('chModalTitle').innerText = "Add New Channel"; }
 
+        // ================= CATEGORIES =================
         new Sortable(document.getElementById('catTableBody'), { animation: 150, handle: '.fa-bars', onEnd: function (evt) { document.querySelectorAll('#catTableBody tr').forEach((row, index) => { update(ref(db, 'categories/' + row.getAttribute('data-id')), { sortOrder: index }); }); } });
         document.getElementById('btnAddCat').addEventListener('click', () => { const catName = document.getElementById('newCatName').value; if(catName) { push(ref(db, 'categories'), { name: catName, sortOrder: 9999 }).then(() => { Swal.fire('Success', 'Category Added!', 'success'); document.getElementById('newCatName').value = ''; }); } });
         window.editCat = async function(key, oldName) { const { value: newName } = await Swal.fire({ title: 'Rename Category', input: 'text', inputValue: oldName, showCancelButton: true }); if (newName && newName !== oldName) { update(ref(db, 'categories/' + key), { name: newName }); } };
         onValue(ref(db, 'categories'), (snapshot) => { const tbody = document.getElementById('catTableBody'); const dropdown = document.getElementById('chCat'); const filterDropdown = document.getElementById('channelFilter'); tbody.innerHTML = ''; dropdown.innerHTML = '<option value="">Select Category...</option>'; const currentFilter = filterDropdown.value; filterDropdown.innerHTML = '<option value="All">All Categories</option>'; if(snapshot.exists()) { const catArr = []; snapshot.forEach((child) => { catArr.push({key: child.key, ...child.val()}); }); catArr.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)); catArr.forEach(v => { tbody.innerHTML += `<tr data-id="${v.key}" class="draggable-row"><td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td><td>${v.name}</td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-warning me-2" onclick="window.editCat('${v.key}', '${v.name}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteCat('${v.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`; dropdown.innerHTML += `<option value="${v.name}">${v.name}</option>`; filterDropdown.innerHTML += `<option value="${v.name}">${v.name}</option>`; }); } filterDropdown.value = currentFilter; });
         window.deleteCat = function(key) { remove(ref(db, 'categories/' + key)); }
 
-
-        // ================= M3U IMPORT LOGIC (CLEAN - NO PROXY) =================
-        
-        // 1. Populate Category Dropdown for Import
-        onValue(ref(db, 'categories'), (snapshot) => {
-            const impDropdown = document.getElementById('impTargetCat');
-            impDropdown.innerHTML = '<option value="">Select Target Category...</option>';
-            if(snapshot.exists()) {
-                snapshot.forEach((child) => {
-                    impDropdown.innerHTML += `<option value="${child.val().name}">${child.val().name}</option>`;
-                });
-            }
-        });
-
-        let parsedChannels = [];
-
-        // 2. Fetch M3U Function (Direct Fetch via Proxy for Text Preview Only)
-        document.getElementById('btnFetchM3u').addEventListener('click', async () => {
-            const url = document.getElementById('impM3uUrl').value;
-            if(!url) return Swal.fire('Error', 'Please enter Playlist URL', 'error');
-
-            document.getElementById('loaderM3u').style.display = 'block';
-            document.getElementById('importArea').style.display = 'none';
-
-            try {
-                // We use this JUST to read the text content of the playlist.
-                // It does NOT affect the final link saved to Firebase.
-                const corsProxy = 'https://api.allorigins.win/raw?url=';
-                const response = await fetch(corsProxy + encodeURIComponent(url)); 
-                if(!response.ok) throw new Error("Network response was not ok");
-                const text = await response.text();
-                parseM3U(text);
-            } catch (error) {
-                console.error(error);
-                Swal.fire('Failed', 'Could not load playlist. Check URL or try again.', 'error');
-                document.getElementById('loaderM3u').style.display = 'none';
-            }
-        });
-
-        // 3. Parse Logic
-        function parseM3U(data) {
-            const lines = data.split('\n');
-            parsedChannels = [];
-            let currentName = "";
-            let currentLogo = "";
-
-            for (let i = 0; i < lines.length; i++) {
-                let line = lines[i].trim();
-                if (line.startsWith('#EXTINF')) {
-                    const nameParts = line.split(',');
-                    currentName = nameParts[nameParts.length - 1].trim();
-                    const logoMatch = line.match(/tvg-logo="([^"]*)"/);
-                    currentLogo = logoMatch ? logoMatch[1] : "";
-                } else if (line.startsWith('http')) {
-                    if (currentName) {
-                        // Important: We store the ORIGINAL line from the playlist
-                        parsedChannels.push({ name: currentName, logo: currentLogo, url: line });
-                        currentName = ""; 
-                    }
-                }
-            }
-
-            renderImportTable();
-        }
-
-        // 4. Render Table (Fixed Scrolling)
-        function renderImportTable() {
-            document.getElementById('loaderM3u').style.display = 'none';
-            document.getElementById('importArea').style.display = 'block';
-            document.getElementById('foundCount').innerText = parsedChannels.length;
-            
-            const tbody = document.getElementById('m3uListBody');
-            tbody.innerHTML = '';
-
-            // Rendering all channels might slow down browser, limiting to 500 for display safety
-            parsedChannels.slice(0, 500).forEach((ch, index) => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="ps-4"><input type="checkbox" class="imp-check" data-index="${index}"></td>
-                        <td class="text-white fw-bold">${ch.name}</td>
-                        <td class="text-secondary text-truncate" style="max-width: 200px;">${ch.url}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        document.getElementById('selectAllCh').addEventListener('change', function() {
-            document.querySelectorAll('.imp-check').forEach(cb => cb.checked = this.checked);
-        });
-
-        // 5. Final Import Action (Direct Save)
-        document.getElementById('btnConfirmImport').addEventListener('click', () => {
-            const targetCat = document.getElementById('impTargetCat').value;
-
-            if(!targetCat) return Swal.fire('Error', 'Select a category!', 'warning');
-
-            const selectedCheckboxes = document.querySelectorAll('.imp-check:checked');
-            if(selectedCheckboxes.length === 0) return Swal.fire('Error', 'No channels selected', 'warning');
-
-            let importCount = 0;
-
-            selectedCheckboxes.forEach(cb => {
-                const idx = cb.getAttribute('data-index');
-                const chData = parsedChannels[idx];
-
-                // SIMPLE SAVE: Just save the URL found in the playlist directly to Firebase
-                push(ref(db, 'channels'), {
-                    name: chData.name,
-                    category: targetCat,
-                    logo: chData.logo || "https://via.placeholder.com/100",
-                    link: chData.url, 
-                    link2: "",
-                    link3: "",
-                    sortOrder: 9999
-                });
-                importCount++;
-            });
-
-            Swal.fire('Success', `${importCount} Channels imported successfully!`, 'success');
-        });
-
         // Section Switcher
-        window.showSection = function(id) {
-            ['dashboard', 'settings', 'ads', 'leagues', 'league-cats', 'categories', 'channels', 'banners', 'm3u-import'].forEach(sec => {
+        window.showSection = function(id, element) {
+            // Hide all sections
+            ['dashboard', 'settings', 'ads', 'categories', 'channels', 'matches', 'teams'].forEach(sec => {
                 const el = document.getElementById('section-' + sec);
                 if(el) el.style.display = 'none';
             });
-            document.getElementById('section-' + id).style.display = 'block';
+            // Show selected
+            const target = document.getElementById('section-' + id);
+            if(target) target.style.display = 'block';
+            
+            // Activate Nav
             document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+            if(element) element.classList.add('active');
+            
+            // Auto close mobile sidebar
+            document.getElementById('sidebar').classList.remove('mobile-active');
         }
     </script>
 </body>
