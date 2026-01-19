@@ -185,7 +185,10 @@
                     <i class="fa-solid fa-futbol"></i> Manage Matches
                 </div>
 
-                <!-- Manage Teams/Leagues -->
+                <div class="nav-link" onclick="showSection('match-categories', this)">
+                    <i class="fa-solid fa-layer-group"></i> Sports Types
+                </div>
+
                 <div class="nav-link" onclick="showSection('teams', this)">
                     <i class="fa-solid fa-users-line"></i> Teams & Leagues
                 </div>
@@ -195,6 +198,16 @@
                 </div>
                 <div class="nav-link" onclick="showSection('categories', this)">
                     <i class="fa-solid fa-tags"></i> Channel Categories
+                </div>
+                
+                <!-- BDIX Manager -->
+                <div class="nav-link" onclick="showSection('bdix', this)">
+                    <i class="fa-solid fa-server"></i> Manage BDIX
+                </div>
+                
+                <!-- NEW: Private Zone Menu -->
+                <div class="nav-link" onclick="showSection('private', this)">
+                    <i class="fa-solid fa-user-lock"></i> Private Zone
                 </div>
 
                 <div class="nav-link" onclick="showSection('settings', this)">
@@ -218,19 +231,40 @@
                 <h4 class="text-white mb-4">Content Overview</h4>
                 
                 <div class="row g-4 mb-4">
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <div class="custom-card d-flex justify-content-between align-items-center" style="border-color: #00ff9d;">
                             <div class="stats-info">
                                 <h3 id="activeUsers" class="text-success">0</h3>
-                                <p class="m-0 text-white">Online Now</p>
+                                <p class="m-0 text-white">
+                                    Online Now 
+                                    <i class="fa-solid fa-rotate text-secondary ms-2" style="cursor:pointer; font-size: 0.8rem;" onclick="window.resetActiveUsers()" title="Reset Fake Users"></i>
+                                </p>
                             </div>
-                            <div class="spinner-grow text-success" role="status" style="width: 2rem; height: 2rem;"></div>
+                            <div class="spinner-grow text-success" role="status" style="width: 1.5rem; height: 1.5rem;"></div>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-3">
+                        <div class="custom-card d-flex justify-content-between align-items-center" style="border-color: #ff4757;">
+                            <div class="stats-info">
+                                <h3 id="dashLiveMatches" class="text-danger">0</h3>
+                                <p class="m-0 text-white">Live Matches</p>
+                            </div>
+                            <i class="fa-solid fa-tower-broadcast fs-3 text-danger"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
                         <div class="custom-card d-flex justify-content-between align-items-center">
-                            <div class="stats-info"><h3 id="totalChannels">0</h3><p class="m-0">Total Channels</p></div>
-                            <i class="fa-solid fa-tv fs-2 text-danger"></i>
+                            <div class="stats-info">
+                                <h3 id="dashTotalMatches">0</h3>
+                                <p class="m-0">Total Matches</p>
+                            </div>
+                            <i class="fa-solid fa-futbol fs-3 text-secondary"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="custom-card d-flex justify-content-between align-items-center">
+                            <div class="stats-info"><h3 id="totalChannels">0</h3><p class="m-0">Channels</p></div>
+                            <i class="fa-solid fa-tv fs-3 text-info"></i>
                         </div>
                     </div>
                 </div>
@@ -278,31 +312,50 @@
                         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#matchModal" onclick="resetMatchForm()"><i class="fa-solid fa-plus"></i> Add Match</button>
                     </div>
                 </div>
-                <!-- Table Container with scrolling -->
                 <div class="custom-card p-0" style="overflow-x: auto;">
                     <table class="table table-dark table-hover mb-0">
                         <thead>
                             <tr>
                                 <th class="ps-4">Status</th>
+                                <th>Sport</th>
                                 <th>Series/League</th>
                                 <th>Teams</th>
                                 <th>Start Time</th>
-                                <th>Duration</th>
                                 <th class="text-end pe-4">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="matchTableBody">
-                            <!-- Matches will be loaded here -->
-                        </tbody>
+                        <tbody id="matchTableBody"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- TEAMS & LEAGUES MANAGER (DESIGN UPDATED: TABS) -->
+            <!-- MATCH CATEGORIES -->
+            <div id="section-match-categories" style="display: none;">
+                <h4 class="text-white mb-4">Sports Types (Match Categories)</h4>
+                <div class="custom-card">
+                    <label class="form-label text-info">Add New Sport Type</label>
+                    <div class="input-group">
+                        <input type="text" id="newMatchCatName" class="form-control" placeholder="e.g. Cricket, Football">
+                        <button class="btn btn-primary" id="btnAddMatchCat">Add Category</button>
+                    </div>
+                </div>
+                <div class="custom-card p-0 overflow-hidden mt-3">
+                    <table class="table table-dark table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Order</th>
+                                <th>Category Name</th>
+                                <th class="text-end pe-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="matchCatTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TEAMS & LEAGUES MANAGER -->
             <div id="section-teams" style="display: none;">
                 <h4 class="text-white mb-4">Manage Teams & Leagues</h4>
-                
-                <!-- Nav Tabs -->
                 <ul class="nav nav-tabs" id="teamLeagueTabs" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="tab-teams-btn" data-bs-toggle="tab" data-bs-target="#tab-teams-pane" type="button">Teams</button>
@@ -313,18 +366,13 @@
                 </ul>
 
                 <div class="tab-content">
-                    
-                    <!-- TAB 1: TEAMS MANAGER -->
                     <div class="tab-pane fade show active" id="tab-teams-pane">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="text-white m-0">Team List</h5>
-                            <!-- Filter Dropdown -->
                             <select id="teamListFilter" class="form-select w-auto" style="min-width: 200px;" onchange="renderTeamTable()">
                                 <option value="All">All Leagues</option>
                             </select>
                         </div>
-
-                        <!-- Add Team Form -->
                         <div class="custom-card mb-3">
                             <label class="form-label text-info">Add New Team</label>
                             <div class="row g-2">
@@ -344,8 +392,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Full Width Table -->
                         <div class="custom-card p-0 overflow-hidden">
                             <table class="table table-dark table-hover mb-0">
                                 <thead>
@@ -360,11 +406,8 @@
                             </table>
                         </div>
                     </div>
-
-                    <!-- TAB 2: LEAGUES MANAGER -->
                     <div class="tab-pane fade" id="tab-leagues-pane">
                         <h5 class="text-white mb-3">League List</h5>
-                        
                         <div class="custom-card mb-3">
                             <label class="form-label text-warning">Add New League</label>
                             <div class="input-group">
@@ -372,8 +415,6 @@
                                 <button class="btn btn-primary" id="btnAddLeague">Add League</button>
                             </div>
                         </div>
-                        
-                        <!-- Full Width Table -->
                         <div class="custom-card p-0 overflow-hidden">
                             <table class="table table-dark table-hover mb-0">
                                 <thead>
@@ -386,7 +427,6 @@
                             </table>
                         </div>
                     </div>
-
                 </div>
             </div>
 
@@ -400,9 +440,8 @@
                     <div class="col-md-6">
                         <div class="custom-card">
                             <h5 class="text-white mb-3">App Links</h5>
-                            <div class="mb-3"><label class="form-label text-warning">Channel Request Link</label><input type="text" id="requestUrl" class="form-control"></div>
-                            <div class="mb-3"><label class="form-label text-success">Share App Link</label><input type="text" id="shareUrl" class="form-control"></div>
-                            <div class="mb-3"><label class="form-label text-info">Update URL</label><input type="text" id="updateUrl" class="form-control"></div>
+                            <div class="mb-3"><label class="form-label text-info">Join Telegram Link</label><input type="text" id="telegramUrl" class="form-control" placeholder="https://t.me/yourchannel"></div>
+                            <div class="mb-3"><label class="form-label text-white">Update URL (Direct Download)</label><input type="text" id="updateUrl" class="form-control"></div>
                             <div class="mb-3 p-3" style="background: rgba(229, 9, 20, 0.1); border: 1px dashed #e50914; border-radius: 8px;">
                                 <label class="form-label text-danger fw-bold">Latest Version Code</label>
                                 <input type="number" id="appVersionCode" class="form-control">
@@ -462,12 +501,181 @@
             <div id="section-categories" style="display: none;">
                 <h4 class="text-white mb-4">Channel Categories</h4>
                 <div class="custom-card">
-                    <div class="input-group">
-                        <input type="text" id="newCatName" class="form-control" placeholder="Enter Category Name">
-                        <button class="btn btn-primary" id="btnAddCat">Add</button>
+                    <label class="form-label text-info">Add New Category</label>
+                    <div class="row g-2">
+                        <div class="col-md-5">
+                            <input type="text" id="newCatName" class="form-control" placeholder="Category Name (e.g. Sports)">
+                        </div>
+                        <div class="col-md-5">
+                            <input type="text" id="newCatLink" class="form-control" placeholder="Optional Playlist URL (m3u/m3u8)">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100" id="btnAddCat">Add</button>
+                        </div>
                     </div>
                 </div>
-                <div class="custom-card p-0 overflow-hidden"><table class="table table-dark table-hover mb-0"><tbody id="catTableBody"></tbody></table></div>
+                <div class="custom-card p-0 overflow-hidden mt-3"><table class="table table-dark table-hover mb-0"><tbody id="catTableBody"></tbody></table></div>
+            </div>
+
+            <!-- BDIX MANAGER -->
+            <div id="section-bdix" style="display: none;">
+                <h4 class="text-white mb-4">BDIX Categories (FTP)</h4>
+                
+                <div class="custom-card mb-4">
+                    <label class="form-label text-info">Add BDIX Category</label>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <input type="text" id="newBdixName" class="form-control" placeholder="Server Name">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" id="newBdixLogo" class="form-control" placeholder="Logo URL">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" id="newBdixPlaylist" class="form-control" placeholder="Playlist URL (e.g. http://server.com/list.m3u)">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100" id="btnAddBdix">Add Server</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="custom-card p-0 overflow-hidden">
+                    <table class="table table-dark table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Sort</th>
+                                <th>Logo</th>
+                                <th>Name</th>
+                                <th>Playlist URL</th>
+                                <th class="text-end pe-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bdixTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- NEW: PRIVATE ZONE MANAGER (PROFESSIONAL UPDATE) -->
+            <div id="section-private" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="text-white m-0">Private Zone Manager</h4>
+                        <p class="text-secondary small m-0">Manage premium access codes and private content</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-secondary p-2 align-self-center"><i class="fa-solid fa-shield-halved"></i> Secure Area</span>
+                    </div>
+                </div>
+                
+                <!-- TABS -->
+                <ul class="nav nav-tabs" id="privateTabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-codes" type="button"><i class="fa-solid fa-key me-2"></i>Access Codes</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-p-channels" type="button"><i class="fa-solid fa-tv me-2"></i>Private Channels</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-p-cats" type="button"><i class="fa-solid fa-list me-2"></i>Categories</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    
+                    <!-- 1. ACCESS CODES TAB -->
+                    <div class="tab-pane fade show active" id="tab-codes">
+                        <div class="row g-4 mb-4">
+                            <!-- Generate Code Card -->
+                            <div class="col-md-12">
+                                <div class="custom-card border-start border-4 border-warning">
+                                    <h5 class="text-white mb-3">Create New Access</h5>
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label text-secondary small">Access Code (Password)</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-dark border-secondary"><i class="fa-solid fa-lock"></i></span>
+                                                <input type="text" id="newAccessCode" class="form-control" placeholder="e.g. 12345">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label text-secondary small">User Note / Name</label>
+                                            <input type="text" id="newAccessNote" class="form-control" placeholder="e.g. VIP User 1">
+                                        </div>
+                                        <div class="col-md-3 d-flex align-items-end">
+                                            <button class="btn btn-warning w-100 fw-bold" id="btnAddCode"><i class="fa-solid fa-plus me-2"></i>Generate Code</button>
+                                        </div>
+                                        <div class="col-md-3 d-flex align-items-end">
+                                            <button class="btn btn-outline-secondary w-100" onclick="document.getElementById('newAccessCode').value = Math.floor(100000 + Math.random() * 900000)"><i class="fa-solid fa-shuffle me-2"></i>Random</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Codes Table -->
+                        <div class="custom-card p-0 overflow-hidden">
+                            <div class="p-3 border-bottom border-secondary bg-dark bg-opacity-50 d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 text-white"><i class="fa-solid fa-users-viewfinder me-2"></i>Active Access Codes</h6>
+                                <span class="badge bg-primary" id="totalCodesBadge">0 Codes</span>
+                            </div>
+                            <table class="table table-dark table-hover mb-0 align-middle">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-4">Access Code</th>
+                                        <th>Assigned To</th>
+                                        <th>Status</th>
+                                        <th>Device ID (Hardware)</th>
+                                        <th class="text-end pe-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="accessCodeTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 2. PRIVATE CHANNELS TAB -->
+                    <div class="tab-pane fade" id="tab-p-channels">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="text-white m-0">Premium Channel List</h5>
+                            <button class="btn btn-primary btn-sm" onclick="openPrivChannelModal()"><i class="fa-solid fa-plus me-1"></i> Add Channel</button>
+                        </div>
+                        <div class="custom-card p-0 overflow-hidden">
+                            <table class="table table-dark table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-4">Logo</th>
+                                        <th>Channel Name</th>
+                                        <th>Category</th>
+                                        <th class="text-end pe-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="privChannelTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 3. PRIVATE CATEGORIES TAB -->
+                    <div class="tab-pane fade" id="tab-p-cats">
+                        <div class="custom-card mb-4">
+                            <label class="form-label text-info">Create Category</label>
+                            <div class="input-group">
+                                <input type="text" id="newPrivCatName" class="form-control" placeholder="e.g. VIP Movies, Paid Sports">
+                                <button class="btn btn-primary" id="btnAddPrivCat">Add Category</button>
+                            </div>
+                        </div>
+                        <div class="custom-card p-0 overflow-hidden">
+                            <table class="table table-dark table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-4">Category Name</th>
+                                        <th class="text-end pe-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="privCatTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -475,7 +683,7 @@
 
     <!-- ================= MODALS ================= -->
 
-    <!-- Modal: Add/Edit Match (UPDATED FOR HRS/MINS) -->
+    <!-- Modal: Add/Edit Match -->
     <div class="modal fade" id="matchModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -486,42 +694,30 @@
                 <div class="modal-body">
                     <input type="hidden" id="matchEditKey">
                     <div class="row g-3">
-                        <!-- League Select (Filters Teams) -->
-                        <div class="col-md-12">
-                            <label class="form-label text-warning">Select Series/League</label>
-                            <!-- Note: onchange triggers filtration -->
-                            <select class="form-select" id="mSeriesSelect" onchange="filterTeamsByLeague(this.value)">
-                                <option value="">Select League...</option>
-                            </select>
+                        <div class="col-md-6">
+                            <label class="form-label text-white">Sport Type (Category)</label>
+                            <select class="form-select" id="mCategorySelect"><option value="">Select Category...</option></select>
                         </div>
-
-                        <!-- Team 1 -->
+                        <div class="col-md-6">
+                            <label class="form-label text-warning">Select Series/League</label>
+                            <select class="form-select" id="mSeriesSelect" onchange="filterTeamsByLeague(this.value)"><option value="">Select League...</option></select>
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label">Team 1</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-dark border-secondary"><img id="mT1Preview" src="" style="width:20px; height:20px; object-fit:contain;"></span>
-                                <select class="form-select" id="mT1Select" onchange="updateMatchPreview('1')">
-                                    <option value="">Select League First...</option>
-                                </select>
+                                <select class="form-select" id="mT1Select" onchange="updateMatchPreview('1')"><option value="">Select League First...</option></select>
                             </div>
-                            <input type="hidden" id="mT1Name">
-                            <input type="hidden" id="mT1Logo">
+                            <input type="hidden" id="mT1Name"><input type="hidden" id="mT1Logo">
                         </div>
-
-                        <!-- Team 2 -->
                         <div class="col-md-6">
                             <label class="form-label">Team 2</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-dark border-secondary"><img id="mT2Preview" src="" style="width:20px; height:20px; object-fit:contain;"></span>
-                                <select class="form-select" id="mT2Select" onchange="updateMatchPreview('2')">
-                                    <option value="">Select League First...</option>
-                                </select>
+                                <select class="form-select" id="mT2Select" onchange="updateMatchPreview('2')"><option value="">Select League First...</option></select>
                             </div>
-                            <input type="hidden" id="mT2Name">
-                            <input type="hidden" id="mT2Logo">
+                            <input type="hidden" id="mT2Name"><input type="hidden" id="mT2Logo">
                         </div>
-                        
-                        <!-- TIME AND DURATION (UPDATED TO HOURS AND MINUTES) -->
                         <div class="col-md-6">
                             <label class="form-label text-info">Match Start Time</label>
                             <input type="datetime-local" class="form-control" id="mStartTime">
@@ -535,46 +731,28 @@
                                 <span class="input-group-text bg-dark text-white">min</span>
                             </div>
                         </div>
-
-                        <!-- MULTI STREAM LINKS -->
-                        <div class="col-md-12">
-                            <hr class="border-secondary">
-                            <h6 class="text-white mb-3">Stream Links</h6>
-                        </div>
-
-                        <!-- Link 1 -->
+                        <div class="col-md-12"><hr class="border-secondary"><h6 class="text-white mb-3">Stream Links</h6></div>
                         <div class="col-md-12 mb-2">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <label class="form-label text-danger m-0">Server 1 (Main)</label>
-                                <select class="form-select form-select-sm w-auto bg-dark text-white border-secondary channel-quick-select" onchange="copyChannelLink('mLink', this.value)">
-                                    <option value="">Select from Channel...</option>
-                                </select>
+                                <select class="form-select form-select-sm w-auto bg-dark text-white border-secondary channel-quick-select" onchange="copyChannelLink('mLink', this.value)"><option value="">Select from Channel...</option></select>
                             </div>
                             <input type="text" class="form-control" id="mLink" placeholder="Paste Link 1">
                         </div>
-
-                        <!-- Link 2 -->
                         <div class="col-md-6">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <label class="form-label m-0">Server 2</label>
-                                <select class="form-select form-select-sm w-auto bg-dark text-white border-secondary channel-quick-select" onchange="copyChannelLink('mLink2', this.value)">
-                                    <option value="">Select...</option>
-                                </select>
+                                <select class="form-select form-select-sm w-auto bg-dark text-white border-secondary channel-quick-select" onchange="copyChannelLink('mLink2', this.value)"><option value="">Select...</option></select>
                             </div>
                             <input type="text" class="form-control" id="mLink2" placeholder="Paste Link 2">
                         </div>
-
-                        <!-- Link 3 -->
                         <div class="col-md-6">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <label class="form-label m-0">Server 3</label>
-                                <select class="form-select form-select-sm w-auto bg-dark text-white border-secondary channel-quick-select" onchange="copyChannelLink('mLink3', this.value)">
-                                    <option value="">Select...</option>
-                                </select>
+                                <select class="form-select form-select-sm w-auto bg-dark text-white border-secondary channel-quick-select" onchange="copyChannelLink('mLink3', this.value)"><option value="">Select...</option></select>
                             </div>
                             <input type="text" class="form-control" id="mLink3" placeholder="Paste Link 3">
                         </div>
-
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -608,16 +786,47 @@
             </div>
         </div>
     </div>
+    
+    <!-- Modal: Add/Edit Private Channel -->
+    <div class="modal fade" id="privChannelModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="privChModalTitle">Private Channel</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="privChEditKey">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-control" id="privChName">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" id="privChCatSelect"><option value="">Select...</option></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Logo URL</label>
+                        <input type="text" class="form-control" id="privChLogo">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-warning">Stream Link</label>
+                        <input type="text" class="form-control" id="privChLink">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="savePrivChBtn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- UI Logic -->
     <script>
-        // Mobile Sidebar Toggle
-        function toggleMobileSidebar() {
-            document.getElementById('sidebar').classList.toggle('mobile-active');
-        }
+        function toggleMobileSidebar() { document.getElementById('sidebar').classList.toggle('mobile-active'); }
     </script>
 
     <!-- FIREBASE LOGIC -->
@@ -626,7 +835,6 @@
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
         import { getDatabase, ref, push, set, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-        // Your Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDwcMREQuQiTDiJ8prnPkNzxV5eq2U097k",
             authDomain: "sportspro-fb7b9.firebaseapp.com",
@@ -641,8 +849,7 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
         
-        // ================= AUTHENTICATION LOGIC =================
-
+        // ================= AUTHENTICATION =================
         const loginSection = document.getElementById('login-section');
         const adminPanel = document.getElementById('admin-panel');
         const btnLogin = document.getElementById('btnLogin');
@@ -650,72 +857,33 @@
         const btnSpinner = document.getElementById('btnSpinner');
         const btnText = document.getElementById('btnText');
 
-        // Check Login State
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                loginSection.style.display = 'none';
-                adminPanel.style.display = 'block';
-            } else {
-                loginSection.style.display = 'flex';
-                adminPanel.style.display = 'none';
-            }
+            if (user) { loginSection.style.display = 'none'; adminPanel.style.display = 'block'; }
+            else { loginSection.style.display = 'flex'; adminPanel.style.display = 'none'; }
         });
 
-        // Login Action
         btnLogin.addEventListener('click', () => {
             const email = document.getElementById('loginEmail').value;
             const pass = document.getElementById('loginPass').value;
-
-            if(!email || !pass) {
-                Swal.fire('Error', 'Please enter email and password', 'error');
-                return;
-            }
-
-            btnText.style.display = 'none';
-            btnSpinner.style.display = 'inline-block';
-            btnLogin.disabled = true;
-
-            signInWithEmailAndPassword(auth, email, pass)
-                .then((userCredential) => {
-                    const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
-                    Toast.fire({ icon: 'success', title: 'Signed in successfully' });
-                })
-                .catch((error) => {
-                    Swal.fire('Login Failed', error.message, 'error');
-                })
-                .finally(() => {
-                    btnText.style.display = 'inline-block';
-                    btnSpinner.style.display = 'none';
-                    btnLogin.disabled = false;
-                });
+            if(!email || !pass) return Swal.fire('Error', 'Please enter email and password', 'error');
+            btnText.style.display = 'none'; btnSpinner.style.display = 'inline-block'; btnLogin.disabled = true;
+            signInWithEmailAndPassword(auth, email, pass).catch((error) => Swal.fire('Login Failed', error.message, 'error')).finally(() => { btnText.style.display = 'inline-block'; btnSpinner.style.display = 'none'; btnLogin.disabled = false; });
         });
 
-        // Logout Action
         btnLogout.addEventListener('click', () => {
-            Swal.fire({
-                title: 'Logout?',
-                text: "You will be returned to the login screen.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#e50914',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, logout'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    signOut(auth);
-                }
-            });
+            Swal.fire({ title: 'Logout?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#e50914', confirmButtonText: 'Yes, logout' }).then((result) => { if (result.isConfirmed) signOut(auth); });
         });
 
-        // ================= END AUTH LOGIC =================
-
-        // Modal Instances
+        // ================= DASHBOARD & MODALS =================
         const channelModal = new bootstrap.Modal(document.getElementById('channelModal'));
         const matchModal = new bootstrap.Modal(document.getElementById('matchModal'));
 
-        // ================= DASHBOARD STATS & GRAPH =================
         onValue(ref(db, 'active_users'), (snapshot) => { document.getElementById('activeUsers').innerText = snapshot.exists() ? snapshot.size : 0; });
         onValue(ref(db, 'channels'), (snapshot) => { document.getElementById('totalChannels').innerText = snapshot.exists() ? snapshot.size : 0; });
+        
+        window.resetActiveUsers = () => {
+            Swal.fire({ title: 'Reset Active Users?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Yes, Reset' }).then((result) => { if (result.isConfirmed) set(ref(db, 'active_users'), null); });
+        }
         
         let installChartInstance = null;
         onValue(ref(db, 'app_installs'), (snapshot) => {
@@ -723,516 +891,136 @@
             const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
             const oneWeekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).getTime();
             const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-
             let countTotal = 0, countToday = 0, countWeek = 0, countMonth = 0;
-            const graphLabels = [];
-            const graphData = [0, 0, 0, 0, 0, 0, 0]; 
-
-            for (let i = 6; i >= 0; i--) {
-                const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-                graphLabels.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
-            }
-
+            const graphLabels = []; const graphData = [0, 0, 0, 0, 0, 0, 0]; 
+            for (let i = 6; i >= 0; i--) { graphLabels.push(new Date(now.getFullYear(), now.getMonth(), now.getDate() - i).toLocaleDateString('en-US', { weekday: 'short' })); }
             if(snapshot.exists()) {
                 countTotal = snapshot.size;
                 snapshot.forEach(child => {
-                    const data = child.val();
-                    const ts = data.timestamp;
+                    const ts = child.val().timestamp;
                     if (ts >= todayStart) countToday++;
                     if (ts >= oneWeekAgo) countWeek++;
                     if (ts >= thisMonthStart) countMonth++;
                     const daysDiff = Math.floor((now.getTime() - ts) / (1000 * 60 * 60 * 24));
-                    if (daysDiff >= 0 && daysDiff < 7) {
-                        graphData[6 - daysDiff]++; 
-                    }
+                    if (daysDiff >= 0 && daysDiff < 7) graphData[6 - daysDiff]++; 
                 });
             }
-
-            document.getElementById('installTotal').innerText = countTotal;
-            document.getElementById('installToday').innerText = countToday;
-            document.getElementById('installWeek').innerText = countWeek;
-            document.getElementById('installMonth').innerText = countMonth;
+            document.getElementById('installTotal').innerText = countTotal; document.getElementById('installToday').innerText = countToday; document.getElementById('installWeek').innerText = countWeek; document.getElementById('installMonth').innerText = countMonth;
             renderChart(graphLabels, graphData);
         });
 
         function renderChart(labels, data) {
-            const ctxCanvas = document.getElementById('installChart');
-            if(!ctxCanvas) return;
-            const ctx = ctxCanvas.getContext('2d');
-            
+            const ctxCanvas = document.getElementById('installChart'); if(!ctxCanvas) return;
             if (installChartInstance) installChartInstance.destroy();
-
-            installChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'New Installs',
-                        data: data,
-                        borderColor: '#e50914',
-                        backgroundColor: 'rgba(229, 9, 20, 0.2)',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#fff',
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#333' }, ticks: { color: '#a0a6b5', stepSize: 1 } },
-                        x: { grid: { display: false }, ticks: { color: '#a0a6b5' } }
-                    }
-                }
-            });
+            installChartInstance = new Chart(ctxCanvas.getContext('2d'), { type: 'line', data: { labels: labels, datasets: [{ label: 'New Installs', data: data, borderColor: '#e50914', backgroundColor: 'rgba(229, 9, 20, 0.2)', borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: '#fff', pointRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#333' }, ticks: { color: '#a0a6b5', stepSize: 1 } }, x: { grid: { display: false }, ticks: { color: '#a0a6b5' } } } } });
         }
 
-        // ================= LEAGUE & TEAM MANAGER =================
-        
-        // 1. LEAGUE LOGIC
-        document.getElementById('btnAddLeague').addEventListener('click', () => {
-            const name = document.getElementById('newLeagueName').value;
-            if(name) {
-                push(ref(db, 'leagues'), { name: name }).then(() => {
-                    document.getElementById('newLeagueName').value = '';
-                    Swal.fire('Success', 'League Added', 'success');
-                });
-            }
+        // ================= MATCH CATEGORIES =================
+        new Sortable(document.getElementById('matchCatTableBody'), { animation: 150, handle: '.fa-bars', onEnd: function (evt) { document.querySelectorAll('#matchCatTableBody tr').forEach((row, index) => { update(ref(db, 'match_categories/' + row.getAttribute('data-id')), { sortOrder: index }); }); } });
+        document.getElementById('btnAddMatchCat').addEventListener('click', () => { const catName = document.getElementById('newMatchCatName').value; if(catName) { push(ref(db, 'match_categories'), { name: catName, sortOrder: 9999 }).then(() => { Swal.fire('Success', 'Sport Type Added!', 'success'); document.getElementById('newMatchCatName').value = ''; }); } });
+        window.editMatchCat = async function(key, oldName) { const { value: newName } = await Swal.fire({ title: 'Rename Category', input: 'text', inputValue: oldName, showCancelButton: true }); if (newName && newName !== oldName) { update(ref(db, 'match_categories/' + key), { name: newName }); } };
+        window.deleteMatchCat = function(key) { Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((res) => { if (res.isConfirmed) remove(ref(db, 'match_categories/' + key)); }); }
+        onValue(ref(db, 'match_categories'), (snapshot) => { 
+            const tbody = document.getElementById('matchCatTableBody'); const modalDropdown = document.getElementById('mCategorySelect');
+            tbody.innerHTML = ''; modalDropdown.innerHTML = '<option value="">Select Category...</option>';
+            if(snapshot.exists()) { 
+                const catArr = []; snapshot.forEach((child) => { catArr.push({key: child.key, ...child.val()}); }); 
+                catArr.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)); 
+                catArr.forEach(v => { 
+                    tbody.innerHTML += `<tr data-id="${v.key}" class="draggable-row"><td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td><td>${v.name}</td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-warning me-2" onclick="window.editMatchCat('${v.key}', '${v.name}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteMatchCat('${v.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`; 
+                    modalDropdown.innerHTML += `<option value="${v.name}">${v.name}</option>`; 
+                }); 
+            } 
         });
-        
-        // Load Leagues into Table & League Dropdowns (Match Modal & Team Manager)
-        onValue(ref(db, 'leagues'), (snapshot) => {
-            const table = document.getElementById('leagueTableBody');
-            const matchSelect = document.getElementById('mSeriesSelect');
-            const teamLeagueSelect = document.getElementById('newTeamLeague');
-            const teamListFilter = document.getElementById('teamListFilter'); 
 
-            table.innerHTML = '';
-            // Reset Selects but keep default option
-            matchSelect.innerHTML = '<option value="">Select League...</option>';
-            teamLeagueSelect.innerHTML = '<option value="">Select League...</option>';
-            teamListFilter.innerHTML = '<option value="All">All Leagues</option>'; // Reset Filter
-            
+        // ================= LEAGUES & TEAMS =================
+        document.getElementById('btnAddLeague').addEventListener('click', () => { const name = document.getElementById('newLeagueName').value; if(name) { push(ref(db, 'leagues'), { name: name }).then(() => { document.getElementById('newLeagueName').value = ''; Swal.fire('Success', 'League Added', 'success'); }); } });
+        onValue(ref(db, 'leagues'), (snapshot) => {
+            const table = document.getElementById('leagueTableBody'); const matchSelect = document.getElementById('mSeriesSelect'); const teamLeagueSelect = document.getElementById('newTeamLeague'); const teamListFilter = document.getElementById('teamListFilter'); 
+            table.innerHTML = ''; matchSelect.innerHTML = '<option value="">Select League...</option>'; teamLeagueSelect.innerHTML = '<option value="">Select League...</option>'; teamListFilter.innerHTML = '<option value="All">All Leagues</option>';
             if(snapshot.exists()) {
                 snapshot.forEach(child => {
-                    const l = child.val();
-                    const key = child.key;
-                    
-                    // Add to Table
-                    table.innerHTML += `
-                        <tr>
-                            <td class="ps-4">${l.name}</td>
-                            <td class="text-end pe-4">
-                                <button class="btn btn-sm btn-outline-danger" onclick="window.deleteLeague('${key}')"><i class="fa-solid fa-trash"></i></button>
-                            </td>
-                        </tr>`;
-                    
-                    // Add to Dropdowns. IMPORTANT: Value is ID, but we save Name attribute to pull text later
-                    const opt = `<option value="${key}" data-name="${l.name}">${l.name}</option>`;
-                    matchSelect.innerHTML += opt;
-                    teamLeagueSelect.innerHTML += opt;
-                    teamListFilter.innerHTML += opt; // Populate Filter
+                    const l = child.val(); const key = child.key;
+                    table.innerHTML += `<tr><td class="ps-4">${l.name}</td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-warning me-2" onclick="window.editLeague('${key}', '${l.name}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteLeague('${key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+                    const opt = `<option value="${key}" data-name="${l.name}">${l.name}</option>`; matchSelect.innerHTML += opt; teamLeagueSelect.innerHTML += opt; teamListFilter.innerHTML += opt; 
                 });
             }
         });
+        window.editLeague = async (key, oldName) => { const { value: newName } = await Swal.fire({ title: 'Edit League Name', input: 'text', inputValue: oldName, showCancelButton: true }); if (newName && newName !== oldName) { update(ref(db, 'leagues/' + key), { name: newName }); } };
         window.deleteLeague = (key) => remove(ref(db, 'leagues/' + key));
 
-        // 2. TEAM LOGIC (UPDATED WITH FILTERING)
-        window.allTeams = []; // Cache for filtering logic
-        
-        document.getElementById('btnAddTeam').addEventListener('click', () => {
-            const leagueId = document.getElementById('newTeamLeague').value;
-            const name = document.getElementById('newTeamName').value;
-            const logo = document.getElementById('newTeamLogo').value;
-
-            if(name && leagueId) {
-                // Save team WITH leagueId
-                push(ref(db, 'teams'), { name: name, logo: logo, leagueId: leagueId }).then(() => {
-                    document.getElementById('newTeamName').value = '';
-                    document.getElementById('newTeamLogo').value = '';
-                    Swal.fire('Success', 'Team Added', 'success');
-                });
-            } else {
-                Swal.fire('Error', 'Please select a League and enter Team Name', 'error');
-            }
-        });
-
-        // Load Teams into Cache Only (Rendering handled by function)
-        onValue(ref(db, 'teams'), (snapshot) => {
-            window.allTeams = [];
-            if(snapshot.exists()) {
-                snapshot.forEach(child => {
-                    const t = child.val();
-                    const key = child.key;
-                    window.allTeams.push({key: key, ...t});
-                });
-            }
-            // Trigger initial render
-            window.renderTeamTable(); 
-        });
-
-        // NEW: Render Team Table based on Filter
+        window.allTeams = [];
+        document.getElementById('btnAddTeam').addEventListener('click', () => { const leagueId = document.getElementById('newTeamLeague').value; const name = document.getElementById('newTeamName').value; const logo = document.getElementById('newTeamLogo').value; if(name && leagueId) { push(ref(db, 'teams'), { name: name, logo: logo, leagueId: leagueId }).then(() => { document.getElementById('newTeamName').value = ''; document.getElementById('newTeamLogo').value = ''; Swal.fire('Success', 'Team Added', 'success'); }); } else { Swal.fire('Error', 'Please select a League and enter Team Name', 'error'); } });
+        onValue(ref(db, 'teams'), (snapshot) => { window.allTeams = []; if(snapshot.exists()) { snapshot.forEach(child => { window.allTeams.push({key: child.key, ...child.val()}); }); } window.renderTeamTable(); });
         window.renderTeamTable = () => {
-            const table = document.getElementById('teamTableBody');
-            const filterValue = document.getElementById('teamListFilter').value;
-            table.innerHTML = '';
-
-            let teamsToShow = window.allTeams;
-            
-            // Filter if not "All"
-            if (filterValue !== "All") {
-                teamsToShow = window.allTeams.filter(t => t.leagueId === filterValue);
-            }
-
-            if (teamsToShow.length === 0) {
-                table.innerHTML = `<tr><td colspan="4" class="text-center text-secondary">No teams found for selected league.</td></tr>`;
-                return;
-            }
-
-            teamsToShow.forEach(t => {
-                table.innerHTML += `
-                    <tr>
-                        <td class="ps-4"><img src="${t.logo}" class="team-logo-sm" onerror="this.src='https://via.placeholder.com/30'"></td>
-                        <td>${t.name}</td>
-                        <td class="text-secondary small">${t.leagueId || '-'}</td>
-                        <td class="text-end pe-4">
-                            <button class="btn btn-sm btn-outline-danger" onclick="window.deleteTeam('${t.key}')"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>`;
-            });
+            const table = document.getElementById('teamTableBody'); const filterValue = document.getElementById('teamListFilter').value; table.innerHTML = '';
+            let teamsToShow = window.allTeams; if (filterValue !== "All") { teamsToShow = window.allTeams.filter(t => t.leagueId === filterValue); }
+            if (teamsToShow.length === 0) { table.innerHTML = `<tr><td colspan="4" class="text-center text-secondary">No teams found for selected league.</td></tr>`; return; }
+            teamsToShow.forEach(t => { table.innerHTML += `<tr><td class="ps-4"><img src="${t.logo}" class="team-logo-sm" onerror="this.src='https://via.placeholder.com/30'"></td><td>${t.name}</td><td class="text-secondary small">${t.leagueId || '-'}</td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-danger" onclick="window.deleteTeam('${t.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`; });
         };
-
         window.deleteTeam = (key) => remove(ref(db, 'teams/' + key));
 
-
-        // ================= MATCH MANAGER (DEPENDENT DROPDOWN LOGIC) =================
-        
-        // 1. FILTER TEAMS WHEN LEAGUE IS SELECTED
+        // ================= MATCH MANAGER =================
         window.filterTeamsByLeague = (leagueId) => {
-            const select1 = document.getElementById('mT1Select');
-            const select2 = document.getElementById('mT2Select');
-            
-            // Clear current options
-            select1.innerHTML = '<option value="">Select Team...</option>';
-            select2.innerHTML = '<option value="">Select Team...</option>';
-            
-            // Clear Previews
-            document.getElementById('mT1Preview').src = "";
-            document.getElementById('mT2Preview').src = "";
-
+            const select1 = document.getElementById('mT1Select'); const select2 = document.getElementById('mT2Select'); select1.innerHTML = '<option value="">Select Team...</option>'; select2.innerHTML = '<option value="">Select Team...</option>';
+            document.getElementById('mT1Preview').src = ""; document.getElementById('mT2Preview').src = "";
             if (!leagueId) return;
-
-            // Filter Global Teams Cache
             const filteredTeams = window.allTeams.filter(t => t.leagueId === leagueId);
-
-            if(filteredTeams.length === 0) {
-                const opt = '<option value="">No teams in this league</option>';
-                select1.innerHTML = opt;
-                select2.innerHTML = opt;
-            } else {
-                filteredTeams.forEach(t => {
-                    const opt = `<option value="${t.key}">${t.name}</option>`;
-                    select1.innerHTML += opt;
-                    select2.innerHTML += opt;
-                });
-            }
+            if(filteredTeams.length === 0) { const opt = '<option value="">No teams in this league</option>'; select1.innerHTML = opt; select2.innerHTML = opt; } 
+            else { filteredTeams.forEach(t => { const opt = `<option value="${t.key}">${t.name}</option>`; select1.innerHTML += opt; select2.innerHTML += opt; }); }
         };
-
-        // 2. MATCH MANAGER LOGIC
         window.allMatches = [];
         onValue(ref(db, 'matches'), (snapshot) => {
-            const tbody = document.getElementById('matchTableBody');
-            window.allMatches = []; 
-            const now = Date.now();
-
+            const tbody = document.getElementById('matchTableBody'); const dashTotal = document.getElementById('dashTotalMatches'); const dashLive = document.getElementById('dashLiveMatches');
+            window.allMatches = []; let liveCount = 0; const now = Date.now();
             if (snapshot.exists()) {
-                snapshot.forEach(child => {
-                    window.allMatches.push({ key: child.key, ...child.val() });
-                });
-                
+                snapshot.forEach(child => { window.allMatches.push({ key: child.key, ...child.val() }); });
                 window.allMatches.sort((a, b) => (Number(b.startTime) || 0) - (Number(a.startTime) || 0));
-
                 let tableHtml = '';
-
                 window.allMatches.forEach(m => {
-                    const start = Number(m.startTime) || 0;
-                    const end = Number(m.endTime) || (start + (3 * 3600000));
-                    
-                    let statusBadge = '';
-                    let rowClass = '';
-
-                    if (now > end) {
-                        statusBadge = '<span class="badge bg-danger">EXPIRED</span>';
-                        rowClass = 'expired-row';
-                    } else if (now >= start && now <= end) {
-                        statusBadge = '<span class="badge bg-success">LIVE NOW</span>';
-                    } else {
-                        statusBadge = '<span class="badge bg-warning text-dark">UPCOMING</span>';
-                    }
-
-                    const startDate = start ? new Date(start).toLocaleString() : 'N/A';
-                    
-                    // Display friendly duration
-                    const diffMs = end - start;
-                    const hrs = Math.floor(diffMs / 3600000);
-                    const mins = Math.round((diffMs % 3600000) / 60000);
-                    const durationStr = `${hrs}h ${mins}m`;
-
-                    tableHtml += `
-                        <tr class="${rowClass}">
-                            <td class="ps-4">${statusBadge}</td>
-                            <td class="text-white">${m.series || 'N/A'}</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2 text-white">
-                                    <img src="${m.team1_logo}" class="team-logo-sm" onerror="this.src='https://via.placeholder.com/30'">
-                                    ${m.team1_name}
-                                    <span class="text-secondary mx-1">VS</span>
-                                    <img src="${m.team2_logo}" class="team-logo-sm" onerror="this.src='https://via.placeholder.com/30'">
-                                    ${m.team2_name}
-                                </div>
-                            </td>
-                            <td class="text-secondary">${startDate}</td>
-                            <td class="text-white">${durationStr}</td>
-                            <td class="text-end pe-4">
-                                <button class="btn btn-sm btn-outline-info me-2" onclick="window.editMatch('${m.key}')"><i class="fa-solid fa-pen"></i></button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="window.deleteMatch('${m.key}')"><i class="fa-solid fa-trash"></i></button>
-                            </td>
-                        </tr>
-                    `;
+                    const start = Number(m.startTime) || 0; const end = Number(m.endTime) || (start + (3 * 3600000));
+                    let statusBadge = ''; let rowClass = '';
+                    if (now > end) { statusBadge = '<span class="badge bg-danger">EXPIRED</span>'; rowClass = 'expired-row'; } 
+                    else if (now >= start && now <= end) { statusBadge = '<span class="badge bg-success">LIVE NOW</span>'; liveCount++; } 
+                    else { statusBadge = '<span class="badge bg-warning text-dark">UPCOMING</span>'; }
+                    const catBadge = m.match_category ? `<span class="badge bg-info text-dark">${m.match_category}</span>` : '<span class="badge bg-secondary">Gen</span>';
+                    tableHtml += `<tr class="${rowClass}"><td class="ps-4">${statusBadge}</td><td>${catBadge}</td><td class="text-white">${m.series || 'N/A'}</td><td><div class="d-flex align-items-center gap-2 text-white"><img src="${m.team1_logo}" class="team-logo-sm" onerror="this.src='https://via.placeholder.com/30'"> ${m.team1_name} <span class="text-secondary mx-1">VS</span> <img src="${m.team2_logo}" class="team-logo-sm" onerror="this.src='https://via.placeholder.com/30'"> ${m.team2_name}</div></td><td class="text-secondary">${start ? new Date(start).toLocaleString() : 'N/A'}</td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-info me-2" onclick="window.editMatch('${m.key}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteMatch('${m.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
                 });
-                
-                tbody.innerHTML = tableHtml;
-
-            } else {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-3">No matches found</td></tr>';
-            }
+                tbody.innerHTML = tableHtml; dashTotal.innerText = window.allMatches.length; dashLive.innerText = liveCount;
+            } else { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-3">No matches found</td></tr>'; dashTotal.innerText = 0; dashLive.innerText = 0; }
         });
-
-        // MATCH MODAL HELPER: Auto-fill Logo when Team is Selected
-        window.updateMatchPreview = (num) => {
-            const select = document.getElementById(`mT${num}Select`);
-            const preview = document.getElementById(`mT${num}Preview`);
-            const nameInput = document.getElementById(`mT${num}Name`);
-            const logoInput = document.getElementById(`mT${num}Logo`);
-            
-            const teamKey = select.value;
-            const team = window.allTeams.find(t => t.key === teamKey);
-
-            if(team) {
-                preview.src = team.logo;
-                nameInput.value = team.name;
-                logoInput.value = team.logo;
-            } else {
-                preview.src = "";
-                nameInput.value = "";
-                logoInput.value = "";
-            }
-        };
-
-        // MATCH MODAL HELPER: Copy Channel Link (Generic for 3 Links)
-        window.copyChannelLink = (inputId, url) => {
-            if(url) document.getElementById(inputId).value = url;
-        };
-
-        // Save Match
+        window.updateMatchPreview = (num) => { const select = document.getElementById(`mT${num}Select`); const team = window.allTeams.find(t => t.key === select.value); if(team) { document.getElementById(`mT${num}Preview`).src = team.logo; document.getElementById(`mT${num}Name`).value = team.name; document.getElementById(`mT${num}Logo`).value = team.logo; } else { document.getElementById(`mT${num}Preview`).src = ""; document.getElementById(`mT${num}Name`).value = ""; document.getElementById(`mT${num}Logo`).value = ""; } };
+        window.copyChannelLink = (inputId, url) => { if(url) document.getElementById(inputId).value = url; };
         document.getElementById('saveMatchBtn').addEventListener('click', () => {
-            const key = document.getElementById('matchEditKey').value;
-            
-            const seriesSelect = document.getElementById('mSeriesSelect');
-            // Get League ID for data logic if needed, but we save Name for Display
-            const seriesId = seriesSelect.value;
-            const seriesName = seriesSelect.options[seriesSelect.selectedIndex].getAttribute('data-name') || seriesSelect.value;
-            
-            const t1 = document.getElementById('mT1Name').value;
-            const l1 = document.getElementById('mT1Logo').value;
-            const t2 = document.getElementById('mT2Name').value;
-            const l2 = document.getElementById('mT2Logo').value;
-            
-            const link = document.getElementById('mLink').value;
-            const link2 = document.getElementById('mLink2').value;
-            const link3 = document.getElementById('mLink3').value;
-            const startStr = document.getElementById('mStartTime').value;
-            
-            // UPDATED: Use Hours and Minutes inputs
-            const durHrs = parseInt(document.getElementById('mDurationHrs').value) || 0;
-            const durMins = parseInt(document.getElementById('mDurationMins').value) || 0;
-
-            if (!t1 || !t2 || !startStr || !link) {
-                return Swal.fire('Error', 'Teams, Start Time and Main Link are required!', 'error');
-            }
-            
-            if (durHrs === 0 && durMins === 0) {
-                 return Swal.fire('Error', 'Please set a duration greater than 0.', 'error');
-            }
-
-            const startTime = new Date(startStr).getTime();
-            // Calculate End Time based on Hrs + Mins
-            const totalDurationMs = (durHrs * 3600000) + (durMins * 60000);
-            const endTime = startTime + totalDurationMs; 
-            
-            const name = `${t1} vs ${t2}`;
-
-            const data = {
-                name: name,
-                series: seriesName, // Saving Name, not ID
-                leagueId: seriesId, // Optional: Saving ID for future ref
-                team1_name: t1, team1_logo: l1,
-                team2_name: t2, team2_logo: l2,
-                link: link,
-                link2: link2,
-                link3: link3,
-                startTime: startTime,
-                endTime: endTime
-            };
-
-            if (key) {
-                update(ref(db, 'matches/' + key), data).then(() => {
-                    Swal.fire('Updated', 'Match updated successfully', 'success');
-                    matchModal.hide();
-                });
-            } else {
-                push(ref(db, 'matches'), data).then(() => {
-                    Swal.fire('Added', 'Match added successfully', 'success');
-                    matchModal.hide();
-                });
-            }
+            const key = document.getElementById('matchEditKey').value; const seriesSelect = document.getElementById('mSeriesSelect'); const seriesId = seriesSelect.value; const seriesName = seriesSelect.options[seriesSelect.selectedIndex].getAttribute('data-name') || seriesSelect.value; const matchCategory = document.getElementById('mCategorySelect').value; const t1 = document.getElementById('mT1Name').value; const l1 = document.getElementById('mT1Logo').value; const t2 = document.getElementById('mT2Name').value; const l2 = document.getElementById('mT2Logo').value; const link = document.getElementById('mLink').value; const link2 = document.getElementById('mLink2').value; const link3 = document.getElementById('mLink3').value; const startStr = document.getElementById('mStartTime').value; const durHrs = parseInt(document.getElementById('mDurationHrs').value) || 0; const durMins = parseInt(document.getElementById('mDurationMins').value) || 0;
+            if (!t1 || !t2 || !startStr || !link) { return Swal.fire('Error', 'Teams, Start Time and Main Link are required!', 'error'); }
+            if (durHrs === 0 && durMins === 0) { return Swal.fire('Error', 'Please set a duration greater than 0.', 'error'); }
+            const startTime = new Date(startStr).getTime(); const endTime = startTime + (durHrs * 3600000) + (durMins * 60000);
+            const data = { name: `${t1} vs ${t2}`, series: seriesName, leagueId: seriesId, match_category: matchCategory, team1_name: t1, team1_logo: l1, team2_name: t2, team2_logo: l2, link: link, link2: link2, link3: link3, startTime: startTime, endTime: endTime };
+            if (key) { update(ref(db, 'matches/' + key), data).then(() => { Swal.fire('Updated', 'Match updated successfully', 'success'); matchModal.hide(); }); } 
+            else { push(ref(db, 'matches'), data).then(() => { Swal.fire('Added', 'Match added successfully', 'success'); matchModal.hide(); }); }
         });
-
-        // Edit Match Helper
         window.editMatch = (key) => {
-            const m = window.allMatches.find(x => x.key === key);
-            if (!m) return;
-            
-            document.getElementById('matchEditKey').value = key;
-
-            // Logic to restore state (Bit complex due to dynamic dependent dropdowns)
-            
-            // 1. Set League/Series Dropdown
-            const leagueSelect = document.getElementById('mSeriesSelect');
-            // Try to find option by ID (if m.leagueId exists) or Name
-            let leagueOption = null;
-            if(m.leagueId) {
-                leagueSelect.value = m.leagueId;
-            } else {
-                // Fallback: Loop to find option with text matching series name
-                for (let i = 0; i < leagueSelect.options.length; i++) {
-                    if (leagueSelect.options[i].text === m.series) {
-                        leagueSelect.selectedIndex = i;
-                        break;
-                    }
-                }
-            }
-
-            // 2. Trigger Filter Logic Immediately so Team Options appear
-            window.filterTeamsByLeague(leagueSelect.value);
-            
-            // 3. Select Teams (Find by Name since ID might change if re-added)
-            const t1Obj = window.allTeams.find(t => t.name === m.team1_name);
-            const t2Obj = window.allTeams.find(t => t.name === m.team2_name);
-            
-            document.getElementById('mT1Select').value = t1Obj ? t1Obj.key : "";
-            document.getElementById('mT2Select').value = t2Obj ? t2Obj.key : "";
-            
-            // 4. Fill Hidden/Visuals
-            document.getElementById('mT1Name').value = m.team1_name;
-            document.getElementById('mT1Logo').value = m.team1_logo;
-            document.getElementById('mT1Preview').src = m.team1_logo;
-            
-            document.getElementById('mT2Name').value = m.team2_name;
-            document.getElementById('mT2Logo').value = m.team2_logo;
-            document.getElementById('mT2Preview').src = m.team2_logo;
-
-            document.getElementById('mLink').value = m.link;
-            document.getElementById('mLink2').value = m.link2 || "";
-            document.getElementById('mLink3').value = m.link3 || "";
-
-            if(m.startTime) {
-                const d = new Date(m.startTime);
-                // Trick to get local time into datetime-local input
-                const localISOTime = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-                document.getElementById('mStartTime').value = localISOTime;
-            }
-
-            // UPDATED: Calculate Hours and Minutes from start/end diff
-            if(m.endTime && m.startTime) {
-                const diffMs = m.endTime - m.startTime;
-                const hrs = Math.floor(diffMs / 3600000);
-                const mins = Math.round((diffMs % 3600000) / 60000);
-                document.getElementById('mDurationHrs').value = hrs;
-                document.getElementById('mDurationMins').value = mins;
-            } else {
-                document.getElementById('mDurationHrs').value = 3;
-                document.getElementById('mDurationMins').value = 0;
-            }
-
-            document.getElementById('matchModalTitle').innerText = "Edit Match";
-            matchModal.show();
+            const m = window.allMatches.find(x => x.key === key); if (!m) return;
+            document.getElementById('matchEditKey').value = key; const leagueSelect = document.getElementById('mSeriesSelect'); if(m.leagueId) { leagueSelect.value = m.leagueId; } else { for (let i = 0; i < leagueSelect.options.length; i++) { if (leagueSelect.options[i].text === m.series) { leagueSelect.selectedIndex = i; break; } } }
+            document.getElementById('mCategorySelect').value = m.match_category || ""; window.filterTeamsByLeague(leagueSelect.value);
+            const t1Obj = window.allTeams.find(t => t.name === m.team1_name); const t2Obj = window.allTeams.find(t => t.name === m.team2_name);
+            document.getElementById('mT1Select').value = t1Obj ? t1Obj.key : ""; document.getElementById('mT2Select').value = t2Obj ? t2Obj.key : "";
+            document.getElementById('mT1Name').value = m.team1_name; document.getElementById('mT1Logo').value = m.team1_logo; document.getElementById('mT1Preview').src = m.team1_logo; document.getElementById('mT2Name').value = m.team2_name; document.getElementById('mT2Logo').value = m.team2_logo; document.getElementById('mT2Preview').src = m.team2_logo; document.getElementById('mLink').value = m.link; document.getElementById('mLink2').value = m.link2 || ""; document.getElementById('mLink3').value = m.link3 || "";
+            if(m.startTime) { const d = new Date(m.startTime); document.getElementById('mStartTime').value = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16); }
+            if(m.endTime && m.startTime) { const diffMs = m.endTime - m.startTime; document.getElementById('mDurationHrs').value = Math.floor(diffMs / 3600000); document.getElementById('mDurationMins').value = Math.round((diffMs % 3600000) / 60000); } else { document.getElementById('mDurationHrs').value = 3; document.getElementById('mDurationMins').value = 0; }
+            document.getElementById('matchModalTitle').innerText = "Edit Match"; matchModal.show();
         };
-
-        window.deleteMatch = (key) => {
-            Swal.fire({ title: 'Delete Match?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((res) => {
-                if (res.isConfirmed) remove(ref(db, 'matches/' + key));
-            });
-        };
-
-        window.clearExpiredMatches = () => {
-            const now = Date.now();
-            let toDelete = [];
-            window.allMatches.forEach(m => {
-                if (m.endTime < now) toDelete.push(m.key);
-            });
-
-            if (toDelete.length === 0) return Swal.fire('Info', 'No expired matches found.', 'info');
-
-            Swal.fire({
-                title: `Delete ${toDelete.length} Expired Matches?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                confirmButtonText: 'Yes, Delete All'
-            }).then((res) => {
-                if (res.isConfirmed) {
-                    toDelete.forEach(k => remove(ref(db, 'matches/' + k)));
-                    Swal.fire('Deleted!', 'Expired matches removed.', 'success');
-                }
-            });
-        };
-
-        window.resetMatchForm = () => {
-            document.getElementById('matchEditKey').value = "";
-            document.getElementById('mSeriesSelect').value = "";
-            document.getElementById('mT1Select').innerHTML = '<option value="">Select League First...</option>';
-            document.getElementById('mT2Select').innerHTML = '<option value="">Select League First...</option>';
-            document.getElementById('mT1Preview').src = "";
-            document.getElementById('mT2Preview').src = "";
-            document.getElementById('mT1Name').value = "";
-            document.getElementById('mT1Logo').value = "";
-            document.getElementById('mT2Name').value = "";
-            document.getElementById('mT2Logo').value = "";
-            
-            document.getElementById('mLink').value = "";
-            document.getElementById('mLink2').value = "";
-            document.getElementById('mLink3').value = "";
-            document.getElementById('mStartTime').value = "";
-            // Reset to defaults
-            document.getElementById('mDurationHrs').value = "3";
-            document.getElementById('mDurationMins').value = "0";
-            document.getElementById('matchModalTitle').innerText = "Add New Match";
-            
-            // Reset channel quick selects
-            document.querySelectorAll('.channel-quick-select').forEach(el => el.value = "");
-        };
+        window.deleteMatch = (key) => { Swal.fire({ title: 'Delete Match?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((res) => { if (res.isConfirmed) remove(ref(db, 'matches/' + key)); }); };
+        window.clearExpiredMatches = () => { const now = Date.now(); let toDelete = []; window.allMatches.forEach(m => { if (m.endTime < now) toDelete.push(m.key); }); if (toDelete.length === 0) return Swal.fire('Info', 'No expired matches found.', 'info'); Swal.fire({ title: `Delete ${toDelete.length} Expired Matches?`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Yes, Delete All' }).then((res) => { if (res.isConfirmed) { toDelete.forEach(k => remove(ref(db, 'matches/' + k))); Swal.fire('Deleted!', 'Expired matches removed.', 'success'); } }); };
+        window.resetMatchForm = () => { document.getElementById('matchEditKey').value = ""; document.getElementById('mCategorySelect').value = ""; document.getElementById('mSeriesSelect').value = ""; document.getElementById('mT1Select').innerHTML = '<option value="">Select League First...</option>'; document.getElementById('mT2Select').innerHTML = '<option value="">Select League First...</option>'; document.getElementById('mT1Preview').src = ""; document.getElementById('mT2Preview').src = ""; document.getElementById('mT1Name').value = ""; document.getElementById('mT1Logo').value = ""; document.getElementById('mT2Name').value = ""; document.getElementById('mT2Logo').value = ""; document.getElementById('mLink').value = ""; document.getElementById('mLink2').value = ""; document.getElementById('mLink3').value = ""; document.getElementById('mStartTime').value = ""; document.getElementById('mDurationHrs').value = "3"; document.getElementById('mDurationMins').value = "0"; document.getElementById('matchModalTitle').innerText = "Add New Match"; document.querySelectorAll('.channel-quick-select').forEach(el => el.value = ""); };
 
         // ================= APP SETTINGS =================
         const settingsRef = ref(db, 'app_settings');
         onValue(settingsRef, (snap) => {
             if(snap.exists()) {
                 const data = snap.val();
-                document.getElementById('requestUrl').value = data.request_url || '';
-                document.getElementById('shareUrl').value = data.share_url || '';
+                document.getElementById('telegramUrl').value = data.telegram_url || '';
                 document.getElementById('updateUrl').value = data.update_url || '';
                 document.getElementById('aboutText').value = data.about_text || '';
                 document.getElementById('appVersionCode').value = data.latest_version_code || '1';
@@ -1240,8 +1028,7 @@
         });
         document.getElementById('saveSettingsBtn').addEventListener('click', () => { 
             update(settingsRef, { 
-                request_url: document.getElementById('requestUrl').value, 
-                share_url: document.getElementById('shareUrl').value, 
+                telegram_url: document.getElementById('telegramUrl').value,
                 update_url: document.getElementById('updateUrl').value, 
                 about_text: document.getElementById('aboutText').value,
                 latest_version_code: parseInt(document.getElementById('appVersionCode').value) || 1
@@ -1253,12 +1040,9 @@
         onValue(adsRef, (snapshot) => {
             if(snapshot.exists()) {
                 const ads = snapshot.val();
-                document.getElementById('adPopCode').value = ads.popunder?.code || '';
-                document.getElementById('adPopStatus').checked = ads.popunder?.active || false;
-                document.getElementById('adNativeCode').value = ads.native?.code || '';
-                document.getElementById('adNativeStatus').checked = ads.native?.active || false;
-                document.getElementById('adStickyCode').value = ads.sticky?.code || '';
-                document.getElementById('adStickyStatus').checked = ads.sticky?.active || false;
+                document.getElementById('adPopCode').value = ads.popunder?.code || ''; document.getElementById('adPopStatus').checked = ads.popunder?.active || false;
+                document.getElementById('adNativeCode').value = ads.native?.code || ''; document.getElementById('adNativeStatus').checked = ads.native?.active || false;
+                document.getElementById('adStickyCode').value = ads.sticky?.code || ''; document.getElementById('adStickyStatus').checked = ads.sticky?.active || false;
             }
         });
         document.getElementById('saveAdsBtn').addEventListener('click', () => {
@@ -1271,29 +1055,13 @@
         document.getElementById('channelFilter').addEventListener('change', function() { renderChannelTable(this.value); });
         function renderChannelTable(filterCat = "All") { const tbody = document.getElementById('channelTableBody'); tbody.innerHTML = ''; let displayData = window.allChannelsData; if(filterCat !== "All") { displayData = window.allChannelsData.filter(ch => ch.category === filterCat); } displayData.forEach(v => { tbody.innerHTML += `<tr data-id="${v.key}" class="draggable-row"><td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td><td class="ps-2"><img src="${v.logo}" class="channel-img-preview" onerror="this.src='https://via.placeholder.com/40'"></td><td class="text-white fw-bold">${v.name}</td><td><span class="badge bg-secondary">${v.category}</span></td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-info me-2" onclick="window.editChannel('${v.key}', '${v.name}', '${v.logo}', '${v.category}', '${v.link}', '${v.link2 || ''}', '${v.link3 || ''}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteChannel('${v.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`; }); }
         onValue(ref(db, 'channels'), (snapshot) => { 
-            let count = 0; 
-            window.allChannelsData = []; 
-            const channelSelects = document.querySelectorAll('.channel-quick-select');
-            
-            // Clear Selects
-            channelSelects.forEach(sel => sel.innerHTML = '<option value="">Select...</option>');
-
+            let count = 0; window.allChannelsData = []; const channelSelects = document.querySelectorAll('.channel-quick-select'); channelSelects.forEach(sel => sel.innerHTML = '<option value="">Select...</option>');
             if(snapshot.exists()) { 
-                snapshot.forEach((child) => { 
-                    const data = {key: child.key, ...child.val()};
-                    window.allChannelsData.push(data);
-                    
-                    // Populate ALL Channel Selects in Match Modal
-                    const opt = `<option value="${data.link}">${data.name}</option>`;
-                    channelSelects.forEach(sel => sel.innerHTML += opt);
-                }); 
-                window.allChannelsData.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)); 
-                count = window.allChannelsData.length; 
+                snapshot.forEach((child) => { const data = {key: child.key, ...child.val()}; window.allChannelsData.push(data); const opt = `<option value="${data.link}">${data.name}</option>`; channelSelects.forEach(sel => sel.innerHTML += opt); }); 
+                window.allChannelsData.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)); count = window.allChannelsData.length; 
             } 
-            document.getElementById('totalChannels').innerText = count; 
-            renderChannelTable(document.getElementById('channelFilter').value); 
+            document.getElementById('totalChannels').innerText = count; renderChannelTable(document.getElementById('channelFilter').value); 
         });
-
         document.getElementById('saveChannelBtn').addEventListener('click', () => { const key = document.getElementById('chEditKey').value; const data = { name: document.getElementById('chName').value, category: document.getElementById('chCat').value, logo: document.getElementById('chLogo').value, link: document.getElementById('chLink').value, link2: document.getElementById('chLink2').value, link3: document.getElementById('chLink3').value, sortOrder: key ? undefined : 9999 }; if(key) delete data.sortOrder; if(!data.name || !data.link) { Swal.fire('Error', 'Data missing!', 'error'); return; } if(key) { update(ref(db, 'channels/' + key), data).then(() => { Swal.fire('Success', 'Updated', 'success'); channelModal.hide(); }); } else { push(ref(db, 'channels'), data).then(() => { Swal.fire('Success', 'Added', 'success'); channelModal.hide(); }); } });
         new Sortable(document.getElementById('channelTableBody'), { animation: 150, handle: '.fa-bars', onEnd: function (evt) { document.querySelectorAll('#channelTableBody tr').forEach((row, index) => { update(ref(db, 'channels/' + row.getAttribute('data-id')), { sortOrder: index }); }); } });
         window.editChannel = function(key, name, logo, cat, link, link2, link3) { document.getElementById('chEditKey').value = key; document.getElementById('chName').value = name; document.getElementById('chLogo').value = logo; document.getElementById('chCat').value = cat; document.getElementById('chLink').value = link; document.getElementById('chLink2').value = link2; document.getElementById('chLink3').value = link3; document.getElementById('chModalTitle').innerText = "Edit Channel"; channelModal.show(); }
@@ -1302,27 +1070,273 @@
 
         // ================= CATEGORIES =================
         new Sortable(document.getElementById('catTableBody'), { animation: 150, handle: '.fa-bars', onEnd: function (evt) { document.querySelectorAll('#catTableBody tr').forEach((row, index) => { update(ref(db, 'categories/' + row.getAttribute('data-id')), { sortOrder: index }); }); } });
-        document.getElementById('btnAddCat').addEventListener('click', () => { const catName = document.getElementById('newCatName').value; if(catName) { push(ref(db, 'categories'), { name: catName, sortOrder: 9999 }).then(() => { Swal.fire('Success', 'Category Added!', 'success'); document.getElementById('newCatName').value = ''; }); } });
-        window.editCat = async function(key, oldName) { const { value: newName } = await Swal.fire({ title: 'Rename Category', input: 'text', inputValue: oldName, showCancelButton: true }); if (newName && newName !== oldName) { update(ref(db, 'categories/' + key), { name: newName }); } };
-        onValue(ref(db, 'categories'), (snapshot) => { const tbody = document.getElementById('catTableBody'); const dropdown = document.getElementById('chCat'); const filterDropdown = document.getElementById('channelFilter'); tbody.innerHTML = ''; dropdown.innerHTML = '<option value="">Select Category...</option>'; const currentFilter = filterDropdown.value; filterDropdown.innerHTML = '<option value="All">All Categories</option>'; if(snapshot.exists()) { const catArr = []; snapshot.forEach((child) => { catArr.push({key: child.key, ...child.val()}); }); catArr.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)); catArr.forEach(v => { tbody.innerHTML += `<tr data-id="${v.key}" class="draggable-row"><td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td><td>${v.name}</td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-warning me-2" onclick="window.editCat('${v.key}', '${v.name}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteCat('${v.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`; dropdown.innerHTML += `<option value="${v.name}">${v.name}</option>`; filterDropdown.innerHTML += `<option value="${v.name}">${v.name}</option>`; }); } filterDropdown.value = currentFilter; });
+        document.getElementById('btnAddCat').addEventListener('click', () => { const catName = document.getElementById('newCatName').value; const catLink = document.getElementById('newCatLink').value; if(catName) { push(ref(db, 'categories'), { name: catName, link: catLink, sortOrder: 9999 }).then(() => { Swal.fire('Success', 'Category Added!', 'success'); document.getElementById('newCatName').value = ''; document.getElementById('newCatLink').value = ''; }); } });
+        window.editCat = async function(key, oldName, oldLink) { 
+            const { value: formValues } = await Swal.fire({
+                title: 'Edit Category', html: `<label class="mb-1 text-dark fw-bold">Name</label><input id="swal-input1" class="swal2-input" value="${oldName}"><label class="mt-3 mb-1 text-dark fw-bold">Playlist URL / Link</label><input id="swal-input2" class="swal2-input" value="${oldLink || ''}">`,
+                focusConfirm: false, showCancelButton: true, preConfirm: () => { return [ document.getElementById('swal-input1').value, document.getElementById('swal-input2').value ] }
+            });
+            if (formValues) { const [newName, newLink] = formValues; if (newName) { update(ref(db, 'categories/' + key), { name: newName, link: newLink }); } }
+        };
+        onValue(ref(db, 'categories'), (snapshot) => { 
+            const tbody = document.getElementById('catTableBody'); const dropdown = document.getElementById('chCat'); const filterDropdown = document.getElementById('channelFilter'); 
+            tbody.innerHTML = ''; dropdown.innerHTML = '<option value="">Select Category...</option>'; const currentFilter = filterDropdown.value; filterDropdown.innerHTML = '<option value="All">All Categories</option>'; 
+            if(snapshot.exists()) { 
+                const catArr = []; snapshot.forEach((child) => { catArr.push({key: child.key, ...child.val()}); }); 
+                catArr.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)); 
+                catArr.forEach(v => { 
+                    const linkBadge = v.link ? '<i class="fa-solid fa-link text-info ms-2" title="Has Link"></i>' : '';
+                    tbody.innerHTML += `<tr data-id="${v.key}" class="draggable-row"><td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td><td>${v.name} ${linkBadge}</td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-warning me-2" onclick="window.editCat('${v.key}', '${v.name}', '${v.link || ''}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteCat('${v.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`; 
+                    dropdown.innerHTML += `<option value="${v.name}">${v.name}</option>`; filterDropdown.innerHTML += `<option value="${v.name}">${v.name}</option>`; 
+                }); 
+            } filterDropdown.value = currentFilter; 
+        });
         window.deleteCat = function(key) { remove(ref(db, 'categories/' + key)); }
+
+        // ================= BDIX MANAGER =================
+        new Sortable(document.getElementById('bdixTableBody'), { animation: 150, handle: '.fa-bars', onEnd: function (evt) { document.querySelectorAll('#bdixTableBody tr').forEach((row, index) => { update(ref(db, 'bdix_categories/' + row.getAttribute('data-id')), { sortOrder: index }); }); } });
+        document.getElementById('btnAddBdix').addEventListener('click', () => { 
+            const name = document.getElementById('newBdixName').value; 
+            const logo = document.getElementById('newBdixLogo').value;
+            const plist = document.getElementById('newBdixPlaylist').value;
+            if(name) { 
+                push(ref(db, 'bdix_categories'), { name: name, logo: logo, playlistUrl: plist, sortOrder: 9999 
+                }).then(() => { Swal.fire('Success', 'BDIX Server Added!', 'success'); document.getElementById('newBdixName').value = ''; document.getElementById('newBdixLogo').value = ''; document.getElementById('newBdixPlaylist').value = ''; }); 
+            } 
+        });
+        onValue(ref(db, 'bdix_categories'), (snapshot) => { 
+            const tbody = document.getElementById('bdixTableBody'); tbody.innerHTML = ''; 
+            if(snapshot.exists()) { 
+                const arr = []; snapshot.forEach((child) => { arr.push({key: child.key, ...child.val()}); }); 
+                arr.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)); 
+                arr.forEach(v => { tbody.innerHTML += `<tr data-id="${v.key}" class="draggable-row"><td class="ps-4 text-secondary"><i class="fa-solid fa-bars" style="cursor: grab;"></i></td><td><img src="${v.logo}" style="width:30px; border-radius:4px;" onerror="this.src='https://via.placeholder.com/30'"></td><td>${v.name}</td><td class="small text-secondary text-truncate" style="max-width: 200px;">${v.playlistUrl || '-'}</td><td class="text-end pe-4"><button class="btn btn-sm btn-outline-warning me-2" onclick="window.editBdix('${v.key}', '${v.name}', '${v.logo}', '${v.playlistUrl || ''}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="window.deleteBdix('${v.key}')"><i class="fa-solid fa-trash"></i></button></td></tr>`; }); 
+            } 
+        });
+        window.editBdix = async function(key, oldName, oldLogo, oldPl) { 
+            const { value: formValues } = await Swal.fire({
+                title: 'Edit BDIX Server', html: `<label class="mb-1 text-dark fw-bold">Server Name</label><input id="swal-bdix1" class="swal2-input" value="${oldName}"><label class="mt-2 mb-1 text-dark fw-bold">Logo URL</label><input id="swal-bdix2" class="swal2-input" value="${oldLogo}"><label class="mt-2 mb-1 text-dark fw-bold">Playlist URL</label><input id="swal-bdix3" class="swal2-input" value="${oldPl}">`,
+                focusConfirm: false, showCancelButton: true, preConfirm: () => { return [ document.getElementById('swal-bdix1').value, document.getElementById('swal-bdix2').value, document.getElementById('swal-bdix3').value ] }
+            });
+            if (formValues) { const [n, l, p] = formValues; if (n) { update(ref(db, 'bdix_categories/' + key), { name: n, logo: l, playlistUrl: p }); } }
+        };
+        window.deleteBdix = function(key) { Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }).then((res) => { if (res.isConfirmed) remove(ref(db, 'bdix_categories/' + key)); }); }
+
+        // ================= PRIVATE ZONE LOGIC =================
+        
+        // 1. ACCESS CODES
+        document.getElementById('btnAddCode').addEventListener('click', () => {
+            const code = document.getElementById('newAccessCode').value.trim();
+            const note = document.getElementById('newAccessNote').value.trim();
+            if(code) {
+                // Using code as key for easy lookup. 
+                // deviceId is initially null, meaning it's available for any device.
+                set(ref(db, 'private_access_codes/' + code), { 
+                    code: code, 
+                    note: note || 'User',
+                    deviceId: null, 
+                    timestamp: Date.now()
+                }).then(() => {
+                    Swal.fire('Generated', `Code <b>${code}</b> is ready to use.`, 'success');
+                    document.getElementById('newAccessCode').value = '';
+                    document.getElementById('newAccessNote').value = '';
+                });
+            } else {
+                Swal.fire('Error', 'Please enter a code (password)', 'error');
+            }
+        });
+
+        onValue(ref(db, 'private_access_codes'), (snapshot) => {
+            const tbody = document.getElementById('accessCodeTable');
+            const countBadge = document.getElementById('totalCodesBadge');
+            tbody.innerHTML = '';
+            
+            if(snapshot.exists()) {
+                const count = snapshot.size;
+                countBadge.innerText = count + ' Codes';
+                
+                snapshot.forEach(child => {
+                    const data = child.val();
+                    const isUsed = data.deviceId ? true : false;
+                    
+                    // Status Badges
+                    const statusBadge = isUsed 
+                        ? `<span class="badge bg-danger bg-opacity-75"><i class="fa-solid fa-ban me-1"></i>In Use</span>` 
+                        : `<span class="badge bg-success bg-opacity-75"><i class="fa-solid fa-check me-1"></i>Available</span>`;
+
+                    // Device Info display
+                    const deviceInfo = isUsed 
+                        ? `<span class="text-white small font-monospace" title="${data.deviceId}">${data.deviceId.substring(0, 12)}...</span>` 
+                        : `<span class="text-secondary small">-- No Device --</span>`;
+                    
+                    // Reset Button (Only shows if device is connected)
+                    const resetBtn = isUsed
+                        ? `<button class="btn btn-sm btn-outline-warning me-2" onclick="window.resetDevice('${data.code}')" title="Reset Device ID"><i class="fa-solid fa-rotate-left"></i></button>`
+                        : `<button class="btn btn-sm btn-outline-secondary me-2" disabled><i class="fa-solid fa-rotate-left"></i></button>`;
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="ps-4"><span class="fw-bold text-warning font-monospace fs-6">${data.code}</span></td>
+                            <td class="text-white">${data.note}</td>
+                            <td>${statusBadge}</td>
+                            <td>${deviceInfo}</td>
+                            <td class="text-end pe-4">
+                                ${resetBtn}
+                                <button class="btn btn-sm btn-outline-danger" onclick="window.deleteAccessCode('${data.code}')" title="Delete Code"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else { 
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-secondary py-4"><i class="fa-solid fa-folder-open fs-1 mb-2 d-block"></i>No Access Codes Found</td></tr>'; 
+                countBadge.innerText = '0 Codes';
+            }
+        });
+
+        // Function to Reset Device ID (Make it available again)
+        window.resetDevice = (code) => {
+            Swal.fire({ 
+                title: 'Reset Device Lock?', 
+                text: "The current user will be logged out, and a new device can use this code.", 
+                icon: 'warning', 
+                showCancelButton: true, 
+                confirmButtonColor: '#ffc107', 
+                cancelButtonColor: '#333',
+                confirmButtonText: 'Yes, Reset Device' 
+            })
+            .then((res) => { 
+                if(res.isConfirmed) {
+                    update(ref(db, 'private_access_codes/' + code), { deviceId: null })
+                        .then(() => Swal.fire('Reset!', 'Device ID cleared. Code is now available.', 'success'));
+                } 
+            });
+        };
+
+        window.deleteAccessCode = (code) => {
+            Swal.fire({ title: 'Delete Code?', text: "User won't be able to login anymore.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' })
+            .then((res) => { if(res.isConfirmed) remove(ref(db, 'private_access_codes/' + code)); });
+        };
+
+        // 2. PRIVATE CATEGORIES
+        document.getElementById('btnAddPrivCat').addEventListener('click', () => {
+            const name = document.getElementById('newPrivCatName').value.trim();
+            if(name) {
+                push(ref(db, 'private_categories'), { name: name }).then(() => {
+                    document.getElementById('newPrivCatName').value = '';
+                    Swal.fire('Success', 'Category Added', 'success');
+                });
+            }
+        });
+        
+        window.editPrivCat = async (key, oldName) => {
+            const { value: newName } = await Swal.fire({
+                title: 'Edit Category',
+                input: 'text',
+                inputValue: oldName,
+                showCancelButton: true,
+                inputValidator: (value) => { if (!value) return 'You need to write something!' }
+            });
+            if (newName && newName !== oldName) {
+                update(ref(db, 'private_categories/' + key), { name: newName });
+            }
+        };
+
+        window.deletePrivCat = (key) => {
+            Swal.fire({
+                title: 'Delete Category?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33'
+            }).then((res) => {
+                if(res.isConfirmed) remove(ref(db, 'private_categories/' + key));
+            });
+        };
+
+        window.allPrivCats = [];
+        onValue(ref(db, 'private_categories'), (snapshot) => {
+            const tbody = document.getElementById('privCatTable');
+            const select = document.getElementById('privChCatSelect');
+            tbody.innerHTML = ''; select.innerHTML = '<option value="">Select Category...</option>';
+            window.allPrivCats = [];
+            if(snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const val = child.val();
+                    window.allPrivCats.push({key: child.key, ...val});
+                    tbody.innerHTML += `<tr>
+                        <td class="ps-4 fw-bold text-white">${val.name}</td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-outline-warning me-2" onclick="window.editPrivCat('${child.key}', '${val.name}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="window.deletePrivCat('${child.key}')"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+                    select.innerHTML += `<option value="${val.name}">${val.name}</option>`;
+                });
+            }
+        });
+
+        // 3. PRIVATE CHANNELS
+        const privChModal = new bootstrap.Modal(document.getElementById('privChannelModal'));
+        window.openPrivChannelModal = () => {
+            document.getElementById('privChEditKey').value = '';
+            document.getElementById('privChName').value = '';
+            document.getElementById('privChLogo').value = '';
+            document.getElementById('privChLink').value = '';
+            document.getElementById('privChCatSelect').value = '';
+            document.getElementById('privChModalTitle').innerText = "Add Private Channel";
+            privChModal.show();
+        };
+        window.editPrivChannel = (key, name, logo, cat, link) => {
+            document.getElementById('privChEditKey').value = key;
+            document.getElementById('privChName').value = name;
+            document.getElementById('privChLogo').value = logo;
+            document.getElementById('privChCatSelect').value = cat;
+            document.getElementById('privChLink').value = link;
+            document.getElementById('privChModalTitle').innerText = "Edit Private Channel";
+            privChModal.show();
+        };
+
+        window.deletePrivChannel = (key) => {
+            Swal.fire({
+                title: 'Delete Channel?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33'
+            }).then((res) => {
+                if(res.isConfirmed) remove(ref(db, 'private_channels/' + key));
+            });
+        };
+
+        document.getElementById('savePrivChBtn').addEventListener('click', () => {
+            const key = document.getElementById('privChEditKey').value;
+            const data = {
+                name: document.getElementById('privChName').value,
+                logo: document.getElementById('privChLogo').value,
+                category: document.getElementById('privChCatSelect').value,
+                link: document.getElementById('privChLink').value
+            };
+            if(!data.name || !data.link || !data.category) { Swal.fire('Error', 'Name, Category and Link are required', 'error'); return; }
+            if(key) { update(ref(db, 'private_channels/' + key), data).then(() => { privChModal.hide(); Swal.fire('Success', 'Updated', 'success'); }); } 
+            else { push(ref(db, 'private_channels'), data).then(() => { privChModal.hide(); Swal.fire('Success', 'Added', 'success'); }); }
+        });
+        onValue(ref(db, 'private_channels'), (snapshot) => {
+            const tbody = document.getElementById('privChannelTable');
+            tbody.innerHTML = '';
+            if(snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const v = child.val();
+                    tbody.innerHTML += `<tr>
+                        <td class="ps-4"><img src="${v.logo}" style="width:30px; border-radius:4px;" onerror="this.src='https://via.placeholder.com/30'"></td>
+                        <td class="text-white">${v.name}</td>
+                        <td><span class="badge bg-info text-dark">${v.category}</span></td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-outline-warning me-2" onclick="editPrivChannel('${child.key}', '${v.name}', '${v.logo}', '${v.category}', '${v.link}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="window.deletePrivChannel('${child.key}')"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+                });
+            } else { tbody.innerHTML = '<tr><td colspan="4" class="text-center text-secondary">No private channels</td></tr>'; }
+        });
 
         // Section Switcher
         window.showSection = function(id, element) {
-            // Hide all sections
-            ['dashboard', 'settings', 'ads', 'categories', 'channels', 'matches', 'teams'].forEach(sec => {
-                const el = document.getElementById('section-' + sec);
-                if(el) el.style.display = 'none';
+            ['dashboard', 'settings', 'ads', 'categories', 'channels', 'matches', 'match-categories', 'teams', 'bdix', 'private'].forEach(sec => {
+                const el = document.getElementById('section-' + sec); if(el) el.style.display = 'none';
             });
-            // Show selected
-            const target = document.getElementById('section-' + id);
-            if(target) target.style.display = 'block';
-            
-            // Activate Nav
-            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-            if(element) element.classList.add('active');
-            
-            // Auto close mobile sidebar
+            const target = document.getElementById('section-' + id); if(target) target.style.display = 'block';
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active')); if(element) element.classList.add('active');
             document.getElementById('sidebar').classList.remove('mobile-active');
         }
     </script>
